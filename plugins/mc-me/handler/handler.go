@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
 	"github.com/Mattilsynet/map-types/gen/go/command/v1"
@@ -20,6 +21,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	ApiSubject = "map.%s"
+)
+
 // TODO: implement somewhere else the nats connection and sendToMapQueryApi, as it's more general than just managed-environment
 type ManagedEnvironmentHandler struct {
 	nc *nats.Conn
@@ -32,7 +37,23 @@ func New(nc *nats.Conn) *ManagedEnvironmentHandler {
 func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd cobra.Command, args ...string) error {
 	// Now, send the message to your API
 	if cmd.Use == "get" {
-		qryErr := ma.sendToMapQueryApi(&query.Query{})
+		if len(args) < 1 {
+			return errors.New("no id provided")
+		}
+
+		qryErr := ma.sendToMapQueryApi(&query.Query{
+			Type: &metav1.TypeMeta{
+				Kind:       "Query",
+				ApiVersion: "v1",
+			},
+			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironment", ResourceVersion: uuid.NewString()},
+			Spec: &query.QuerySpec{
+				Action:  "get",
+				Type:    &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
+				Session: config.CurrentConfig.Nats.Session,
+				Id:      args[0],
+			},
+		})
 		if qryErr != nil {
 			return qryErr
 		}
@@ -40,6 +61,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd cobra.Command, args 
 		if len(args) < 1 {
 			return errors.New("no file provided")
 		}
+
 		filePath := args[0]
 
 		data, err := readFileContent(filePath)
@@ -86,11 +108,30 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd cobra.Command, args 
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
-	panic("not implemented") // TODO: Implement
+	queryBytes, protoMarshalErr := proto.Marshal(qry)
+	if protoMarshalErr != nil {
+		return protoMarshalErr
+	}
+	a, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, "get"), queryBytes, time.Second*10)
+	if natsRequestErr != nil {
+		return natsRequestErr
+	}
+	fmt.Println("Response: ", string(a.Data))
+	return nil
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapCommandApi(cmd *command.Command) error {
-	panic("not implemented") // TODO: Implement
+	queryBytes, protoMarshalErr := proto.Marshal(cmd)
+	if protoMarshalErr != nil {
+		return protoMarshalErr
+	}
+	apiOperation := cmd.Spec.Operation
+	a, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, apiOperation), queryBytes, time.Second*10)
+	if natsRequestErr != nil {
+		return natsRequestErr
+	}
+	fmt.Println("Response: ", string(a.Data))
+	return nil
 }
 
 func readFileContent(filePath string) ([]byte, error) {

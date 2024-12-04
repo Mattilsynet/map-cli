@@ -42,6 +42,7 @@ func main() {
 }
 
 func natsContextSelect() {
+	// TODO: execplugin, nats context select and execContextSelect isnt needed as nats context select returns the info we need, so we should do both in same operation for efficiency
 	err := execPlugin("nats", "context", "select")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to execute plugin: %v\n", err)
