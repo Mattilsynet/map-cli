@@ -6,36 +6,48 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/viper"
 )
 
 var CurrentConfig *Config
 
+type Nats struct {
+	CredentialFilePath string `mapstructure:"credentialfilepath"`
+	Session            string `mapstructure:"session"`
+	nc                 *nats.Conn
+}
 type Config struct {
-	Nats struct {
-		CredentialFilePath string `mapstructure:"credentialfilepath"`
-		Session            string `mapstructure:"session"`
-	}
+	Nats          Nats
 	Authenticated bool
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		Nats: struct {
-			CredentialFilePath string "mapstructure:\"credentialfilepath\""
-			Session            string "mapstructure:\"session\""
-		}{
+		Nats: Nats{
 			CredentialFilePath: ".", Session: "",
 		},
 		Authenticated: false,
 	}
 }
 
+func (n *Nats) GetConnection() (*nats.Conn, error) {
+	if n.nc == nil {
+		// TODO: do this more dynamically with using the credentials file path if exists, and determine nats url from config
+		nc, err := nats.Connect("nats://localhost:4222")
+		if err != nil {
+			return nil, err
+		}
+		n.nc = nc
+	}
+	return n.nc, nil
+}
+
 func init() {
 	CurrentConfig = loadConfigIntoViper()
 }
 
-func isAuthenticated() bool {
+func IsAuthenticated() bool {
 	return CurrentConfig.Authenticated
 }
 

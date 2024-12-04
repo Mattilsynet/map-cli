@@ -4,10 +4,18 @@ package main
 import (
 	"fmt"
 
+	"github.com/Mattilsynet/map-cli/internal/config"
+	"github.com/Mattilsynet/map-cli/plugins/mc-me/handler"
 	"github.com/spf13/cobra"
 )
 
 func main() {
+	nc, err := config.CurrentConfig.Nats.GetConnection()
+	if err != nil {
+		fmt.Printf("Error connecting to NATS: %v\n", err)
+		return
+	}
+	handler := handler.New(nc)
 	rootCmd := &cobra.Command{
 		Use:     "me",
 		Short:   "Managed Environment (me) plugin",
@@ -17,7 +25,8 @@ func main() {
 		Use:   "apply",
 		Short: "Create or update a managed-environment",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("apply called")
+			err := handler.HandleCobraCommand(cmd, args)
+			fmt.Printf("Error: %v\n", err)
 		},
 	})
 	rootCmd.AddCommand(&cobra.Command{
@@ -35,6 +44,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "get",
 		Short: "Get a managed-environment",
+		Run: func(cmd *cobra.Command, args []string) {
+			handler.HandleCobraCommand(cmd, args)
+		},
 	})
 
 	if err := rootCmd.Execute(); err != nil {

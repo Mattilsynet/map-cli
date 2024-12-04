@@ -26,6 +26,7 @@ const (
 )
 
 // TODO: implement somewhere else the nats connection and sendToMapQueryApi, as it's more general than just managed-environment
+
 type ManagedEnvironmentHandler struct {
 	nc *nats.Conn
 }
@@ -34,7 +35,7 @@ func New(nc *nats.Conn) *ManagedEnvironmentHandler {
 	return &ManagedEnvironmentHandler{nc: nc}
 }
 
-func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd cobra.Command, args ...string) error {
+func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error {
 	// Now, send the message to your API
 	if cmd.Use == "get" {
 		if len(args) < 1 {
@@ -66,7 +67,12 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd cobra.Command, args 
 
 		data, err := readFileContent(filePath)
 		if err != nil {
-			return fmt.Errorf("failed to read file '%s': %w", filePath, err)
+			meEmpty := &managedenvironment_v1.ManagedEnvironment{Type: &metav1.TypeMeta{}, Metadata: &metav1.ObjectMeta{}, Spec: &managedenvironment_v1.ManagedEnvironmentSpec{}}
+			meBytes, err := proto.Marshal(meEmpty)
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("failed to read file '%s': %w\n valid structure would be:%s", filePath, err, string(meBytes))
 		}
 
 		var message *managedenvironment_v1.ManagedEnvironment
