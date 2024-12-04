@@ -67,12 +67,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 
 		data, err := readFileContent(filePath)
 		if err != nil {
-			meEmpty := &managedenvironment_v1.ManagedEnvironment{Type: &metav1.TypeMeta{}, Metadata: &metav1.ObjectMeta{}, Spec: &managedenvironment_v1.ManagedEnvironmentSpec{}}
-			meBytes, err := proto.Marshal(meEmpty)
-			if err != nil {
-				return err
-			}
-			return fmt.Errorf("failed to read file '%s': %w\n valid structure would be:%s", filePath, err, string(meBytes))
+			return fmt.Errorf("failed to read file '%s': %w", filePath, err)
 		}
 
 		var message *managedenvironment_v1.ManagedEnvironment
@@ -86,7 +81,12 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			return fmt.Errorf("unsupported file format for file '%s'", filePath)
 		}
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal data from file '%s': %w", filePath, err)
+			meEmpty := &managedenvironment_v1.ManagedEnvironment{Type: &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"}, Metadata: &metav1.ObjectMeta{Name: "map-dev", ResourceVersion: uuid.NewString()}, Spec: &managedenvironment_v1.ManagedEnvironmentSpec{}}
+			meBytes, jsonMarshalIdentErr := json.MarshalIndent(meEmpty, "", " ")
+			if jsonMarshalIdentErr != nil {
+				return jsonMarshalIdentErr
+			}
+			return fmt.Errorf("failed to unmarshal data from file '%s' with error: %w \n valid json would be: \n%s", filePath, err, string(meBytes))
 		}
 		bytes, protoMarshalErr := proto.Marshal(message)
 		if protoMarshalErr != nil {
@@ -97,7 +97,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 				Kind:       "Command",
 				ApiVersion: "v1",
 			},
-			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironment", ResourceVersion: uuid.NewString()},
+			Metadata: &metav1.ObjectMeta{Name: "Command", ResourceVersion: uuid.NewString()},
 			Spec: &command.CommandSpec{
 				Operation:   cmd.Use,
 				Type:        &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
