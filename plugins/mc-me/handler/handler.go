@@ -58,6 +58,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 		if qryErr != nil {
 			return qryErr
 		}
+		// INFO: APPLY!
 	} else {
 		if len(args) < 1 {
 			return errors.New("no file provided")
@@ -92,6 +93,10 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 		if protoMarshalErr != nil {
 			return protoMarshalErr
 		}
+		sessionId := config.CurrentConfig.Nats.Session
+		if sessionId == "" {
+			return errors.New("no session id provided, try map-cli auth login")
+		}
 		cmdErr := ma.sendToMapCommandApi(&command.Command{
 			Type: &metav1.TypeMeta{
 				Kind:       "Command",
@@ -102,7 +107,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 				Operation:   cmd.Use,
 				Type:        &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
 				TypePayload: bytes,
-				SessionId:   config.CurrentConfig.Nats.Session,
+				SessionId:   sessionId,
 			},
 		})
 		if cmdErr != nil {
@@ -114,7 +119,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
-	queryBytes, protoMarshalErr := proto.Marshal(qry)
+	queryBytes, protoMarshalErr := json.Marshal(qry)
 	if protoMarshalErr != nil {
 		return protoMarshalErr
 	}
@@ -127,12 +132,13 @@ func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapCommandApi(cmd *command.Command) error {
-	queryBytes, protoMarshalErr := proto.Marshal(cmd)
+	commandBytes, protoMarshalErr := json.Marshal(cmd)
 	if protoMarshalErr != nil {
 		return protoMarshalErr
 	}
+	fmt.Println("command bytes: " + string(commandBytes))
 	apiOperation := cmd.Spec.Operation
-	a, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, apiOperation), queryBytes, time.Second*10)
+	a, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, apiOperation), commandBytes, time.Second*10)
 	if natsRequestErr != nil {
 		return natsRequestErr
 	}

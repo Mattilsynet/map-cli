@@ -3,11 +3,13 @@ module github.com/Mattilsynet/map-cli
 go 1.22.5
 
 require (
-	github.com/Mattilsynet/map-types v0.0.88
+	github.com/Mattilsynet/map-types v0.0.98
 	github.com/google/uuid v1.4.0
 	github.com/nats-io/nats.go v1.34.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	google.golang.org/protobuf v1.33.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -34,7 +36,5 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

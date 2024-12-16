@@ -1,7 +1,7 @@
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20230914171853-63dfe56cc2c4.1 h1:2gmp+PRca1fqQHf/WMKOgu9inVb0R0N07TucgY3QZCQ=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20230914171853-63dfe56cc2c4.1/go.mod h1:xafc+XIsTxTy76GJQ1TKgvJWsSugFBqMaN27WhUblew=
-github.com/Mattilsynet/map-types v0.0.88 h1:ZNJ5/wPrg+xiDRhsmuPsLFz8fHlDUpei/TOgHlwrhAk=
-github.com/Mattilsynet/map-types v0.0.88/go.mod h1:KcLfWrCBXMlLXF+PZitM1oeXafd76yqJBBTAwM7Kvhs=
+github.com/Mattilsynet/map-types v0.0.98 h1:KPcmCD1DiW2vd/C3be9H2jUFcVZR6B0FBlb0q4w0Yt8=
+github.com/Mattilsynet/map-types v0.0.98/go.mod h1:KcLfWrCBXMlLXF+PZitM1oeXafd76yqJBBTAwM7Kvhs=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	// TODO: We need to make sure that we're not reliant on nats connection to actually show available commands.
 	nc, err := config.CurrentConfig.Nats.GetConnection()
 	if err != nil {
 		fmt.Printf("Error connecting to NATS: %v\n", err)
@@ -26,16 +27,11 @@ func main() {
 		Short: "Create or update a managed-environment",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := handler.HandleCobraCommand(cmd, args)
-			fmt.Printf("Error: %v\n", err)
+			if err != nil {
+				// TODO: We should provide normal human-interaction errors and not just print the error
+				fmt.Println("Error: ", err)
+			}
 		},
-	})
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "create",
-		Short: "Create a managed-environment",
-	})
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "update",
-		Short: "Update a managed-environment",
 	})
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "delete",
