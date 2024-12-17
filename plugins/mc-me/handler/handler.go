@@ -17,7 +17,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
 )
 
@@ -89,7 +88,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			}
 			return fmt.Errorf("failed to unmarshal data from file '%s' with error: %w \n valid json would be: \n%s", filePath, err, string(meBytes))
 		}
-		bytes, protoMarshalErr := proto.Marshal(message)
+		bytes, protoMarshalErr := message.MarshalVT()
 		if protoMarshalErr != nil {
 			return protoMarshalErr
 		}
@@ -132,7 +131,7 @@ func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapCommandApi(cmd *command.Command) error {
-	commandBytes, protoMarshalErr := json.Marshal(cmd)
+	commandBytes, protoMarshalErr := cmd.MarshalVT()
 	if protoMarshalErr != nil {
 		return protoMarshalErr
 	}

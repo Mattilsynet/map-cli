@@ -10,6 +10,6 @@
  "spec": {
    "azure_owner_group": "abc",
    "slack_channel_plattform_notification_email": "slack@slack.slack",
-   "team_domain": "map"
+   "namespace": "map"
  }
 }

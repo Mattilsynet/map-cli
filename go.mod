@@ -3,7 +3,7 @@ module github.com/Mattilsynet/map-cli
 go 1.22.5
 
 require (
-	github.com/Mattilsynet/map-types v0.0.98
+	github.com/Mattilsynet/map-types v0.1.1
 	github.com/google/uuid v1.4.0
 	github.com/nats-io/nats.go v1.34.0
 	github.com/spf13/cobra v1.8.1
@@ -23,6 +23,7 @@ require (
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/planetscale/vtprotobuf v0.6.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
