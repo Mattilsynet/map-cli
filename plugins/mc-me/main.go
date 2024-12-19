@@ -36,6 +36,13 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "delete",
 		Short: "Delete a managed-environment",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := handler.HandleCobraCommand(cmd, args)
+			if err != nil {
+				// TODO: We should provide normal human-interaction errors and not just print the error
+				fmt.Println("Error: ", err)
+			}
+		},
 	})
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "get",

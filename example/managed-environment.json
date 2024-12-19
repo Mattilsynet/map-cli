@@ -4,7 +4,7 @@
   "api_version": "v1"
  },
  "metadata": {
-  "name": "ManagedEnvironment",
+  "name": "map-ops",
   "resource_version": "d1c1d253-400b-4414-bb5f-7f101913f759"
  },
  "spec": {

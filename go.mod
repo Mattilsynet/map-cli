@@ -3,7 +3,7 @@ module github.com/Mattilsynet/map-cli
 go 1.22.5
 
 require (
-	github.com/Mattilsynet/map-types v0.1.1
+	github.com/Mattilsynet/map-types v0.1.3
 	github.com/google/uuid v1.4.0
 	github.com/nats-io/nats.go v1.34.0
 	github.com/spf13/cobra v1.8.1
