@@ -37,10 +37,10 @@ func New(nc *nats.Conn) *ManagedEnvironmentHandler {
 func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error {
 	// Now, send the message to your API
 	if cmd.Use == "get" {
-		if len(args) < 1 {
-			return errors.New("no id provided")
+		listOfMeta := make([]*metav1.ObjectMeta, 0)
+		for _, arg := range args {
+			listOfMeta = append(listOfMeta, &metav1.ObjectMeta{Name: arg})
 		}
-
 		qryErr := ma.sendToMapQueryApi(&query.Query{
 			Type: &metav1.TypeMeta{
 				Kind:       "Query",
@@ -48,10 +48,10 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			},
 			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironment", ResourceVersion: uuid.NewString()},
 			Spec: &query.QuerySpec{
-				Action:  "get",
-				Type:    &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
-				Session: config.CurrentConfig.Nats.Session,
-				Id:      args[0],
+				Action:       "get",
+				Type:         &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
+				Session:      config.CurrentConfig.Nats.Session,
+				TypeMetadata: listOfMeta,
 			},
 		})
 		if qryErr != nil {
@@ -118,7 +118,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 }
 
 func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
-	queryBytes, protoMarshalErr := json.Marshal(qry)
+	queryBytes, protoMarshalErr := qry.MarshalVT()
 	if protoMarshalErr != nil {
 		return protoMarshalErr
 	}
