@@ -1,4 +1,6 @@
+package gitignore
 
+const GitignoreTemplate = `
 # wasmcloud oriented files and folders
 wit/deps
 build/
@@ -64,3 +66,4 @@ terraform.rc
 .idea/
 
 .terraform.lock.hcl
+`
