@@ -3,17 +3,17 @@ module github.com/Mattilsynet/map-cli
 go 1.22.5
 
 require (
-	github.com/Mattilsynet/map-types v0.1.5
+	github.com/Mattilsynet/mapis v0.0.1
 	github.com/google/uuid v1.4.0
 	github.com/nats-io/nats.go v1.34.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.36.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20230914171853-63dfe56cc2c4.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.1-20241127180247-a33202765966.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
