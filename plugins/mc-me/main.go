@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
 	"github.com/Mattilsynet/map-cli/plugins/mc-me/handler"
@@ -48,9 +49,13 @@ func main() {
 		Use:   "get",
 		Short: "Get a managed-environment",
 		Run: func(cmd *cobra.Command, args []string) {
-			handler.HandleCobraCommand(cmd, args)
+			err := handler.HandleCobraCommand(cmd, args)
+			if err != nil {
+				fmt.Println("Error: ", err)
+			}
 		},
 	})
+	time.Sleep(2000)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

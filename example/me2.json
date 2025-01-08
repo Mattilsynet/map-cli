@@ -1,0 +1,15 @@
+{
+ "type": {
+  "kind": "ManagedEnvironment",
+  "api_version": "v1"
+ },
+ "metadata": {
+  "name": "map-dev",
+  "resource_version": "d1c1d253-400b-4414-bb5f-7f101913f759"
+ },
+ "spec": {
+   "azure_owner_group": "abc",
+   "slack_channel_plattform_notification_email": "slack@slack.slack",
+   "namespace": "map"
+ }
+}

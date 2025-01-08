@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,7 +38,39 @@ func New(nc *nats.Conn) *ManagedEnvironmentHandler {
 
 func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error {
 	// Now, send the message to your API
+	subject := "map.result." + config.CurrentConfig.Nats.Session + ".>"
+	var subscription *nats.Subscription
+	var subErr error
+	go func() {
+		subscription, subErr = ma.nc.Subscribe(subject, func(msg *nats.Msg) {
+			var qry query.Query
+			if err := proto.Unmarshal(msg.Data, &qry); err == nil {
+				bdy := qry.Status.TypePayload
+				for _, bytes := range bdy {
+					me := managedenvironment_v1.ManagedEnvironment{}
+					proto.Unmarshal(bytes, &me)
+					bytes, err := json.MarshalIndent(&me, "", " ")
+					if err != nil {
+						fmt.Println("Error marshalling json")
+					}
+					fmt.Println(string(bytes))
+				}
+			} else {
+				fmt.Println(string(msg.Data))
+			}
+		})
+		if subErr != nil {
+			log.Fatalf("Error subscribing to NATS: %v\n", subErr)
+		}
+	}()
+
 	if cmd.Use == "get" {
+		name := ""
+		if len(args) == 1 {
+			name = args[0]
+		} else if len(args) > 1 {
+			return fmt.Errorf("too many arguments, expected 1, got %d", len(args))
+		}
 		listOfMeta := make([]*metav1.ObjectMeta, 0)
 		for _, arg := range args {
 			listOfMeta = append(listOfMeta, &metav1.ObjectMeta{Name: arg})
@@ -48,9 +82,12 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			},
 			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironment", ResourceVersion: uuid.NewString()},
 			Spec: &query.QuerySpec{
-				Action:       "get",
-				Type:         &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
-				Session:      config.CurrentConfig.Nats.Session,
+				Action:  "get",
+				Type:    &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
+				Session: config.CurrentConfig.Nats.Session,
+				QueryFilter: &query.QueryFilter{
+					Name: name,
+				},
 				TypeMetadata: listOfMeta,
 			},
 		})
@@ -113,7 +150,8 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			return cmdErr
 		}
 	}
-
+	time.Sleep(2 * time.Second)
+	subscription.Unsubscribe()
 	return nil
 }
 
@@ -122,11 +160,10 @@ func (ma *ManagedEnvironmentHandler) sendToMapQueryApi(qry *query.Query) error {
 	if protoMarshalErr != nil {
 		return protoMarshalErr
 	}
-	a, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, "get"), queryBytes, time.Second*10)
+	_, natsRequestErr := ma.nc.Request(fmt.Sprintf(ApiSubject, "get"), queryBytes, time.Second*10)
 	if natsRequestErr != nil {
 		return natsRequestErr
 	}
-	fmt.Println("Response: ", string(a.Data))
 	return nil
 }
 
