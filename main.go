@@ -1,18 +1,77 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
+
+const (
+	MC_CONFIG_NAME = "config.toml"
+)
+
+var (
+	mcLogLevel   slog.Level
+	mcConfigFile string
+)
+
+func init() {
+	pflag.StringVar(&mcConfigFile, "config", "config.toml", "file to read configuration from")
+	var mcLogLevelInput string
+	pflag.StringVar(&mcLogLevelInput, "log-level", "info", "log level (debug, info, warn, error)")
+
+	if initConfigErr := initConfigDir(); initConfigErr != nil {
+		fmt.Printf("Failed to initialize config directory: %v", initConfigErr)
+		os.Exit(1)
+	}
+
+	initLogger(mcLogLevelInput)
+}
+
+func initConfigDir() error {
+	return nil
+}
+
+func initLogger(level string) {
+	logLevel, err := parseLogLevel(level)
+	if err != nil {
+		fmt.Println("Invalid log level provided: " + err.Error())
+		os.Exit(1)
+	}
+	logger := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: logLevel,
+	})
+	slog.SetDefault(slog.New(logger))
+}
+
+func parseLogLevel(level string) (slog.Level, error) {
+	switch strings.ToLower(level) {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return slog.LevelInfo, errors.New("unsupported log level")
+	}
+}
 
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "mc",
 		Short: "Main command (mc) for managing tasks",
 	}
+
+	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:     "managed-environment",
