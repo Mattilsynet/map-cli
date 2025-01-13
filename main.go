@@ -26,16 +26,7 @@ func init() {
 	var mcLogLevelInput string
 	pflag.StringVar(&mcLogLevelInput, "log-level", "info", "log level (debug, info, warn, error)")
 
-	if initConfigErr := initConfigDir(); initConfigErr != nil {
-		fmt.Printf("Failed to initialize config directory: %v", initConfigErr)
-		os.Exit(1)
-	}
-
 	initLogger(mcLogLevelInput)
-}
-
-func initConfigDir() error {
-	return nil
 }
 
 func initLogger(level string) {
