@@ -1,13 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
-	"strings"
 
+	"github.com/Mattilsynet/map-cli/internal/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -16,47 +15,19 @@ const (
 	MC_CONFIG_NAME = "config.toml"
 )
 
-var (
-	mcLogLevel   slog.Level
-	mcConfigFile string
-)
+var mcConfigFile string
 
 func init() {
-	pflag.StringVar(&mcConfigFile, "config", "config.toml", "file to read configuration from")
-	var mcLogLevelInput string
-	pflag.StringVar(&mcLogLevelInput, "log-level", "info", "log level (debug, info, warn, error)")
-
-	initLogger(mcLogLevelInput)
-}
-
-func initLogger(level string) {
-	logLevel, err := parseLogLevel(level)
-	if err != nil {
-		fmt.Println("Invalid log level provided: " + err.Error())
-		os.Exit(1)
-	}
-	logger := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: logLevel,
-	})
-	slog.SetDefault(slog.New(logger))
-}
-
-func parseLogLevel(level string) (slog.Level, error) {
-	switch strings.ToLower(level) {
-	case "debug":
-		return slog.LevelDebug, nil
-	case "info":
-		return slog.LevelInfo, nil
-	case "warn":
-		return slog.LevelWarn, nil
-	case "error":
-		return slog.LevelError, nil
-	default:
-		return slog.LevelInfo, errors.New("unsupported log level")
-	}
+	pflag.StringVarP(&mcConfigFile, "config", "c", MC_CONFIG_NAME, "file to read configuration from")
 }
 
 func main() {
+	// Parses all flags and makes them available in pflag.CommandLine.
+	pflag.Parse()
+
+	logger.Reinitialize()
+	slog.Debug("Logger initialized")
+
 	rootCmd := &cobra.Command{
 		Use:   "mc",
 		Short: "Main command (mc) for managing tasks",
