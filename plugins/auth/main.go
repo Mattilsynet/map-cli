@@ -14,27 +14,46 @@ import (
 	"github.com/spf13/viper"
 )
 
-func main() {
-	// create login command
-	rootCmd := &cobra.Command{
-		Use:     "mc-auth",
-		Short:   "Auth plugin",
-		Aliases: []string{"a", "auth"},
-	}
-	nats := &cobra.Command{
-		Use:   "nats",
-		Short: "Authenticate through nats context",
-	}
-	rootCmd.AddCommand(nats)
-	nats.AddCommand(
-		&cobra.Command{
-			Use:   "login",
-			Short: "Choose nats context, i.e., `nats context select`",
-			Run: func(cmd *cobra.Command, args []string) {
-				natsContextSelect()
-			},
-		})
+var rootCmd = &cobra.Command{
+	Use:     "mc-auth",
+	Short:   "Auth plugin",
+	Aliases: []string{"a", "auth"},
+}
 
+var natsCmd = &cobra.Command{
+	Use:   "nats",
+	Short: "Authenticate through nats context",
+}
+
+var natsCmdLogin = &cobra.Command{
+	Use:   "login",
+	Short: "Choose nats context, i.e., `nats context select`",
+	Run: func(cmd *cobra.Command, args []string) {
+		natsContextSelect()
+	},
+}
+
+var azureCmd = &cobra.Command{
+	Use:   "azure",
+	Short: "Authenticate with device code flow",
+}
+
+var azureCmdLogin = &cobra.Command{
+	Use:   "login",
+	Short: "Login with device code flow",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("hello there from azure login")
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(natsCmd)
+	natsCmd.AddCommand(natsCmdLogin)
+	rootCmd.AddCommand(azureCmd)
+	azureCmd.AddCommand(azureCmdLogin)
+}
+
+func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
