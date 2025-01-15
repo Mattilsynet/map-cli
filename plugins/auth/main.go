@@ -3,14 +3,17 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
+	"github.com/Mattilsynet/map-cli/internal/logger"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -54,6 +57,11 @@ func init() {
 }
 
 func main() {
+	pflag.Parse()
+	logger.Reinitialize()
+	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
+
+	slog.Debug("auth plugin executing")
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
