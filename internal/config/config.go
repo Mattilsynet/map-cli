@@ -7,10 +7,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var CurrentConfig *Config
+
+var CmdConfig = &cobra.Command{
+	Use:   "config",
+	Short: "Config",
+}
+
+var CmdConfigSet = &cobra.Command{}
 
 type Nats struct {
 	CredentialFilePath string `mapstructure:"credentialfilepath"`
@@ -20,6 +28,8 @@ type Nats struct {
 type Config struct {
 	Nats          Nats
 	Authenticated bool
+	AzureTenantID string
+	AzureClientID string
 }
 
 func DefaultConfig() *Config {

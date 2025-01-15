@@ -45,7 +45,12 @@ var azureCmdLogin = &cobra.Command{
 	Use:   "login",
 	Short: "Login with device code flow",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("hello there from azure login")
+		cred, err := azureAuth()
+		if err != nil {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+		fmt.Println(cred)
 	},
 }
 
