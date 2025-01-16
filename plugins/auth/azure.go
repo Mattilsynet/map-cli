@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -16,15 +20,36 @@ var (
 	azureScopes []string = []string{"https://graph.microsoft.com/.default"}
 )
 
-func azureAuth() (azcore.TokenCredential, error) {
-	clientID = "stuff"
-	tenantID = "stuff"
+var azureCmd = &cobra.Command{
+	Use:   "azure",
+	Short: "Authenticate with device code flow",
+}
 
+var azureCmdLogin = &cobra.Command{
+	Use:   "login",
+	Short: "Login with device code flow",
+	Run: func(cmd *cobra.Command, args []string) {
+		cred, err := azureAuth()
+		if err != nil {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+		fmt.Println(cred)
+	},
+}
+
+func init() {
+	// Using env vars as default values here, this should probably come from viper config instead.
+	pflag.StringVar(&clientID, "az-client-id", os.Getenv("AZURE_CLIENT_ID"), "Azure client ID")
+	pflag.StringVar(&tenantID, "az-tenant-id", os.Getenv("AZURE_TENANT_ID"), "Azure tenant ID")
+}
+
+func azureAuth() (azcore.TokenCredential, error) {
 	options := azidentity.DeviceCodeCredentialOptions{
-		TenantID: "9e5b7d0e-770b-49e3-90ec-464fe313bdf4",
+		TenantID: tenantID,
 		ClientID: clientID,
 		UserPrompt: func(ctx context.Context, message azidentity.DeviceCodeMessage) error {
-			fmt.Printf("Go to %s and enter the code: %s\n", message.VerificationURL, message.UserCode)
+			fmt.Printf("%s", message.Message)
 			return nil
 		},
 	}

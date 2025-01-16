@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
-	"github.com/Mattilsynet/map-cli/internal/logger"
+	_ "github.com/Mattilsynet/map-cli/internal/logger"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -36,24 +36,6 @@ var natsCmdLogin = &cobra.Command{
 	},
 }
 
-var azureCmd = &cobra.Command{
-	Use:   "azure",
-	Short: "Authenticate with device code flow",
-}
-
-var azureCmdLogin = &cobra.Command{
-	Use:   "login",
-	Short: "Login with device code flow",
-	Run: func(cmd *cobra.Command, args []string) {
-		cred, err := azureAuth()
-		if err != nil {
-			slog.Error(err.Error())
-			os.Exit(1)
-		}
-		fmt.Println(cred)
-	},
-}
-
 func init() {
 	rootCmd.AddCommand(natsCmd)
 	natsCmd.AddCommand(natsCmdLogin)
@@ -63,7 +45,6 @@ func init() {
 
 func main() {
 	pflag.Parse()
-	logger.Reinitialize()
 	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
 
 	slog.Debug("auth plugin executing")

@@ -6,9 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Mattilsynet/map-cli/internal/logger"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
+	_ "github.com/Mattilsynet/map-cli/internal/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -26,8 +24,6 @@ func init() {
 func main() {
 	// Parses all flags and makes them available in pflag.CommandLine.
 	pflag.Parse()
-
-	logger.Reinitialize()
 	slog.Debug("Logger initialized")
 
 	rootCmd := &cobra.Command{
