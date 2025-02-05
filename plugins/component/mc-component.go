@@ -28,12 +28,16 @@ var (
 type model struct {
 	focusIndex int
 	inputs     []textinput.Model
+	choices    []string
+	selected   map[int]struct{}
 	cursorMode cursor.Mode
 }
 
 func initialModel() model {
 	m := model{
-		inputs: make([]textinput.Model, 3),
+		inputs:   make([]textinput.Model, 2),
+		choices:  []string{"Nats Jetstream", "Nats-Core", "Nats KeyValue"},
+		selected: make(map[int]struct{}),
 	}
 
 	var t textinput.Model
@@ -51,10 +55,7 @@ func initialModel() model {
 		case 1:
 			t.Placeholder = "Path to install component, leave blank for current directory"
 			t.CharLimit = 64
-		case 2:
-			t.Placeholder = "Path to install, blank for current directory"
 		}
-
 		m.inputs[i] = t
 	}
 
@@ -84,52 +85,61 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Batch(cmds...)
 
-		// Set focus to next input
-		case "tab", "shift+tab", "enter", "up", "down":
-			s := msg.String()
+			// Set focus to next input
 
-			// Did the user press enter while the submit button was focused?
-			// If so, exit.
-			if s == "enter" && m.focusIndex == len(m.inputs) {
-				return m, tea.Quit
-			}
-
-			// Cycle indexes
-			if s == "up" || s == "shift+tab" {
-				m.focusIndex--
+		case "up", "shift+tab", "enter":
+			if m.focusIndex < len(m.inputs) {
+				return stuff(m, msg)
 			} else {
-				m.focusIndex++
 			}
-
-			if m.focusIndex > len(m.inputs) {
-				m.focusIndex = 0
-			} else if m.focusIndex < 0 {
-				m.focusIndex = len(m.inputs)
-			}
-
-			cmds := make([]tea.Cmd, len(m.inputs))
-			for i := 0; i <= len(m.inputs)-1; i++ {
-				if i == m.focusIndex {
-					// Set focused state
-					cmds[i] = m.inputs[i].Focus()
-					m.inputs[i].PromptStyle = focusedStyle
-					m.inputs[i].TextStyle = focusedStyle
-					continue
-				}
-				// Remove focused state
-				m.inputs[i].Blur()
-				m.inputs[i].PromptStyle = noStyle
-				m.inputs[i].TextStyle = noStyle
-			}
-
-			return m, tea.Batch(cmds...)
+			// Handle character input and blinking
+		}
+		if m.focusIndex < len(m.inputs) {
+			cmd := m.updateInputs(msg)
+			return m, cmd
 		}
 	}
+	return nil, nil
+}
 
-	// Handle character input and blinking
-	cmd := m.updateInputs(msg)
+func stuff(m model, msg tea.Msg) (tea.Model, tea.Cmd) {
+	s := msg.String()
 
-	return m, cmd
+	// Did the user press enter while the submit button was focused?
+	// If so, exit.
+	if s == "enter" && m.focusIndex == len(m.inputs)+len(m.choices) {
+		return m, tea.Quit
+	}
+
+	// Cycle indexes
+	if s == "up" || s == "shift+tab" {
+		m.focusIndex--
+	} else {
+		m.focusIndex++
+	}
+
+	if m.focusIndex > len(m.inputs) {
+		m.focusIndex = 0
+	} else if m.focusIndex < 0 {
+		m.focusIndex = len(m.inputs)
+	}
+
+	cmds := make([]tea.Cmd, len(m.inputs))
+	for i := 0; i <= len(m.inputs)-1; i++ {
+		if i == m.focusIndex {
+			// Set focused state
+			cmds[i] = m.inputs[i].Focus()
+			m.inputs[i].PromptStyle = focusedStyle
+			m.inputs[i].TextStyle = focusedStyle
+			continue
+		}
+		// Remove focused state
+		m.inputs[i].Blur()
+		m.inputs[i].PromptStyle = noStyle
+		m.inputs[i].TextStyle = noStyle
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
@@ -144,6 +154,9 @@ func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
+func (m *model) updateChoices(msg tea.Msg) tea.Cmd {
+}
+
 func (m model) View() string {
 	var b strings.Builder
 
@@ -153,9 +166,29 @@ func (m model) View() string {
 			b.WriteRune('\n')
 		}
 	}
+	for i, choice := range m.choices {
+		y := i + len(m.inputs)
+		// Is the cursor pointing at this choice?
+		cursor := " " // no cursor
+		if m.focusIndex == y {
+			cursor = ">" // cursor!
+		}
 
+		// Is this choice selected?
+		checked := " " // not selected
+		if _, ok := m.selected[i]; ok {
+			checked = "x" // selected!
+		}
+
+		// Render the row
+		s := fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		b.WriteString(s)
+		if i < len(m.choices)-1 {
+			b.WriteRune('\n')
+		}
+	}
 	button := &blurredButton
-	if m.focusIndex == len(m.inputs) {
+	if m.focusIndex == len(m.inputs)+len(m.choices) {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
