@@ -12,12 +12,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
@@ -59,20 +61,29 @@ var azureCmdLogin = &cobra.Command{
 	},
 }
 
-var azureCmdCertLogin = &cobra.Command{
-	Use:   "cert",
-	Short: "Login with Intune client credentials",
+var azureCmdLoginCustom = &cobra.Command{
+	Use:   "login2",
+	Short: "Login with device code flow manually",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(clientCertPath) == 0 {
-			_ = cmd.Help()
+		// Step 1: Request device code
+		deviceCodeResp, err := requestDeviceCode()
+		if err != nil {
+			fmt.Println("Failed to request device code:", err)
 			return
 		}
-		token, err := azureClientCertificateCredential()
+
+		fmt.Println(deviceCodeResp.Message) // Show message to user
+
+		// Step 2: Poll for token response
+		tokenResp, err := pollForToken(deviceCodeResp.DeviceCode)
 		if err != nil {
-			slog.Error(err.Error())
-			os.Exit(1)
+			fmt.Println("Failed to obtain token:", err)
+			return
 		}
-		fmt.Println(token)
+
+		// Step 3: Extract Access & ID Token
+		fmt.Println("Access Token:", tokenResp.AccessToken)
+		fmt.Println("ID Token:", tokenResp.IDToken)
 	},
 }
 
@@ -80,12 +91,10 @@ func init() {
 	// Using env vars as default values here, this should probably come from viper config instead.
 	azureCmd.PersistentFlags().StringVar(&clientID, "az-client-id", os.Getenv("AZURE_CLIENT_ID"), "Azure client ID")
 	azureCmd.PersistentFlags().StringVar(&tenantID, "az-tenant-id", os.Getenv("AZURE_TENANT_ID"), "Azure tenant ID")
-	azureCmdCertLogin.PersistentFlags().StringVar(&clientCertPath, "az-client-cert-path", "", "Path to Intune MDM Client Certificate (PEM format)")
-	azureCmdCertLogin.MarkFlagRequired("az-client-cert-path")
 
 	rootCmd.AddCommand(azureCmd)
 	azureCmd.AddCommand(azureCmdLogin)
-	azureCmd.AddCommand(azureCmdCertLogin)
+	azureCmd.AddCommand(azureCmdLoginCustom)
 	azureCmd.TraverseChildren = true
 }
 
@@ -123,37 +132,79 @@ func azureDeviceCodeFlowAuth() (azcore.TokenCredential, error) {
 	return cred, nil
 }
 
-func azureClientCertificateCredential() (*azcore.AccessToken, error) {
-	certData, err := os.ReadFile(clientCertPath)
+type DeviceCodeResponse struct {
+	DeviceCode      string `json:"device_code"`
+	UserCode        string `json:"user_code"`
+	VerificationURI string `json:"verification_uri"`
+	ExpiresIn       int    `json:"expires_in"`
+	Interval        int    `json:"interval"`
+	Message         string `json:"message"`
+}
+
+func requestDeviceCode() (*DeviceCodeResponse, error) {
+	data := "client_id=" + clientID + "&scope=" + "openid profile email"
+
+	authURL := "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0"
+
+	req, err := http.NewRequest("POST", authURL+"/devicecode", bytes.NewBufferString(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate: %w", err)
+		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	// Decode the PEM-encoded certificate
-	block, _ := pem.Decode(certData)
-	if block == nil {
-		return nil, errors.New("failed to parse PEM block from certificate")
-	}
-
-	// Parse the X.509 certificate
-	cert, err := x509.ParseCertificate(block.Bytes)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	// Create a ClientCertificateCredential
-	cred, err := azidentity.NewClientCertificateCredential(tenantID, clientID, []*x509.Certificate{cert}, nil, nil)
+	body, _ := io.ReadAll(resp.Body)
+	var result DeviceCodeResponse
+	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create ClientCertificateCredential: %w", err)
+		return nil, err
 	}
 
-	// Retrieve an access token
-	token, err := cred.GetToken(context.Background(), policy.TokenRequestOptions{
-		Scopes: azureManagementScopes,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire token: %w", err)
-	}
+	return &result, nil
+}
 
-	return &token, nil
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	IDToken      string `json:"id_token"` // Extract ID Token
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
+func pollForToken(deviceCode string) (*TokenResponse, error) {
+	data := fmt.Sprintf(
+		"grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=%s&client_id=%s",
+		deviceCode, clientID,
+	)
+	authURL := "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0"
+	client := &http.Client{}
+	for {
+		req, _ := http.NewRequest("POST", authURL+"/token", bytes.NewBufferString(data))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		body, _ := ioutil.ReadAll(resp.Body)
+		if resp.StatusCode == 200 {
+			var result TokenResponse
+			err = json.Unmarshal(body, &result)
+			if err != nil {
+				return nil, err
+			}
+			return &result, nil
+		}
+
+		// If authorization is still pending, wait before retrying
+		time.Sleep(5 * time.Second)
+	}
 }
