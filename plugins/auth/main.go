@@ -13,7 +13,6 @@ import (
 	_ "github.com/Mattilsynet/map-cli/internal/logger"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -39,17 +38,12 @@ var natsCmdLogin = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(natsCmd)
 	natsCmd.AddCommand(natsCmdLogin)
-	rootCmd.AddCommand(azureCmd)
-	azureCmd.AddCommand(azureCmdLogin)
 }
 
 func main() {
-	pflag.Parse()
-	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
-
 	slog.Debug("auth plugin executing")
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }

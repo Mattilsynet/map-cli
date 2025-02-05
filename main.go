@@ -17,10 +17,6 @@ const (
 
 var mcConfigFile string
 
-func init() {
-	pflag.StringVarP(&mcConfigFile, "config", "c", MC_CONFIG_NAME, "file to read configuration from")
-}
-
 func main() {
 	// Parses all flags and makes them available in pflag.CommandLine.
 	pflag.Parse()
@@ -30,7 +26,8 @@ func main() {
 		Use:   "mc",
 		Short: "Main command (mc) for managing tasks",
 	}
-	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
+
+	rootCmd.Flags().StringVarP(&mcConfigFile, "config", "c", MC_CONFIG_NAME, "file to read configuration from")
 
 	rootCmd.AddCommand(&cobra.Command{
 		Use:     "managed-environment",
@@ -58,8 +55,10 @@ func main() {
 		},
 	})
 
+	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
+
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }
