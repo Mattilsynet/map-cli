@@ -7,6 +7,8 @@ import (
 	"os/exec"
 
 	"github.com/Mattilsynet/map-cli/internal/logger"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -32,7 +34,6 @@ func main() {
 		Use:   "mc",
 		Short: "Main command (mc) for managing tasks",
 	}
-
 	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
 
 	rootCmd.AddCommand(&cobra.Command{

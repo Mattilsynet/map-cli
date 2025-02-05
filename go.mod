@@ -5,6 +5,8 @@ go 1.22.5
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
 	github.com/Mattilsynet/mapis v0.0.1
+	github.com/Mattilsynet/map-nats-jetstream v0.0.1-pre-19
+	github.com/Mattilsynet/map-nats-kv v0.0.2-pre-8
 	github.com/google/uuid v1.6.0
 	github.com/nats-io/nats.go v1.34.0
 	github.com/spf13/cobra v1.8.1
