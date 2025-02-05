@@ -29,7 +29,8 @@ func setupLogger(level string) {
 		os.Exit(1)
 	}
 	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: logLevel,
+		Level:     logLevel,
+		AddSource: true,
 	})
 	slog.SetDefault(slog.New(handler)) // Set as the global default logger
 }
@@ -54,4 +55,3 @@ func parseLogLevel(level string) (slog.Level, error) {
 		return slog.LevelInfo, errors.New("unsupported log level")
 	}
 }
-
