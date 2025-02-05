@@ -89,22 +89,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "up", "shift+tab", "enter":
 			if m.focusIndex < len(m.inputs) {
-				return stuff(m, msg)
+				return stuff(m, msg.String())
 			} else {
 			}
 			// Handle character input and blinking
 		}
-		if m.focusIndex < len(m.inputs) {
-			cmd := m.updateInputs(msg)
-			return m, cmd
-		}
 	}
-	return nil, nil
+	cmd := m.updateInputs(msg)
+	if m.focusIndex < len(m.inputs) {
+		cmd := m.updateInputs(msg)
+		return m, cmd
+	}
+	return m, cmd
 }
 
-func stuff(m model, msg tea.Msg) (tea.Model, tea.Cmd) {
-	s := msg.String()
-
+func stuff(m model, s string) (tea.Model, tea.Cmd) {
 	// Did the user press enter while the submit button was focused?
 	// If so, exit.
 	if s == "enter" && m.focusIndex == len(m.inputs)+len(m.choices) {
@@ -155,6 +154,7 @@ func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
 }
 
 func (m *model) updateChoices(msg tea.Msg) tea.Cmd {
+	return nil
 }
 
 func (m model) View() string {
@@ -183,9 +183,6 @@ func (m model) View() string {
 		// Render the row
 		s := fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 		b.WriteString(s)
-		if i < len(m.choices)-1 {
-			b.WriteRune('\n')
-		}
 	}
 	button := &blurredButton
 	if m.focusIndex == len(m.inputs)+len(m.choices) {
