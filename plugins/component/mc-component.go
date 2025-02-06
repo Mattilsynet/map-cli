@@ -52,7 +52,9 @@ func main() {
 				os.Exit(1)
 			}
 			modelI := model.(Model)
-			fmt.Println(modelI.CapabilityCatalogue)
+			for index := range modelI.SelectedCapabilities {
+				fmt.Println("Selected capability: ", modelI.CapabilityCatalogue[index])
+			}
 			for _, input := range modelI.Inputs {
 				fmt.Println(input.View())
 			}
