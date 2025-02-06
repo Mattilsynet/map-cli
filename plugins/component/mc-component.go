@@ -5,197 +5,35 @@ import (
 	"os"
 	"strings"
 
-	//	"github.com/charmbracelet/bubbles/progress"
-	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
-var (
-	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	cursorStyle         = focusedStyle
-	noStyle             = lipgloss.NewStyle()
-	helpStyle           = blurredStyle
-	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
-
-	focusedButton = focusedStyle.Render("[ Generate ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Generate"))
+const (
+	dotChar = " • "
 )
 
-type model struct {
-	focusIndex int
-	inputs     []textinput.Model
-	choices    []string
-	selected   map[int]struct{}
-	cursorMode cursor.Mode
-}
-
-func initialModel() model {
-	m := model{
-		inputs:   make([]textinput.Model, 2),
-		choices:  []string{"Nats Jetstream", "Nats-Core", "Nats KeyValue"},
-		selected: make(map[int]struct{}),
-	}
-
-	var t textinput.Model
-	for i := range m.inputs {
-		t = textinput.New()
-		t.Cursor.Style = cursorStyle
-		t.CharLimit = 32
-
-		switch i {
-		case 0:
-			t.Placeholder = "Component name"
-			t.Focus()
-			t.PromptStyle = focusedStyle
-			t.TextStyle = focusedStyle
-		case 1:
-			t.Placeholder = "Path to install component, leave blank for current directory"
-			t.CharLimit = 64
-		}
-		m.inputs[i] = t
-	}
-
-	return m
-}
-
-func (m model) Init() tea.Cmd {
-	return textinput.Blink
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "esc":
-			return m, tea.Quit
-
-		// Change cursor mode
-		case "ctrl+r":
-			m.cursorMode++
-			if m.cursorMode > cursor.CursorHide {
-				m.cursorMode = cursor.CursorBlink
-			}
-			cmds := make([]tea.Cmd, len(m.inputs))
-			for i := range m.inputs {
-				cmds[i] = m.inputs[i].Cursor.SetMode(m.cursorMode)
-			}
-			return m, tea.Batch(cmds...)
-
-			// Set focus to next input
-
-		case "up", "shift+tab", "enter":
-			if m.focusIndex < len(m.inputs) {
-				return stuff(m, msg.String())
-			} else {
-			}
-			// Handle character input and blinking
-		}
-	}
-	cmd := m.updateInputs(msg)
-	if m.focusIndex < len(m.inputs) {
-		cmd := m.updateInputs(msg)
-		return m, cmd
-	}
-	return m, cmd
-}
-
-func stuff(m model, s string) (tea.Model, tea.Cmd) {
-	// Did the user press enter while the submit button was focused?
-	// If so, exit.
-	if s == "enter" && m.focusIndex == len(m.inputs)+len(m.choices) {
-		return m, tea.Quit
-	}
-
-	// Cycle indexes
-	if s == "up" || s == "shift+tab" {
-		m.focusIndex--
-	} else {
-		m.focusIndex++
-	}
-
-	if m.focusIndex > len(m.inputs) {
-		m.focusIndex = 0
-	} else if m.focusIndex < 0 {
-		m.focusIndex = len(m.inputs)
-	}
-
-	cmds := make([]tea.Cmd, len(m.inputs))
-	for i := 0; i <= len(m.inputs)-1; i++ {
-		if i == m.focusIndex {
-			// Set focused state
-			cmds[i] = m.inputs[i].Focus()
-			m.inputs[i].PromptStyle = focusedStyle
-			m.inputs[i].TextStyle = focusedStyle
-			continue
-		}
-		// Remove focused state
-		m.inputs[i].Blur()
-		m.inputs[i].PromptStyle = noStyle
-		m.inputs[i].TextStyle = noStyle
-	}
-
-	return m, tea.Batch(cmds...)
-}
-
-func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-
-	// Only text inputs with Focus() set will respond, so it's safe to simply
-	// update all of them here without any further logic.
-	for i := range m.inputs {
-		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-func (m *model) updateChoices(msg tea.Msg) tea.Cmd {
-	return nil
-}
-
-func (m model) View() string {
-	var b strings.Builder
-
-	for i := range m.inputs {
-		b.WriteString(m.inputs[i].View())
-		if i < len(m.inputs)-1 {
-			b.WriteRune('\n')
-		}
-	}
-	for i, choice := range m.choices {
-		y := i + len(m.inputs)
-		// Is the cursor pointing at this choice?
-		cursor := " " // no cursor
-		if m.focusIndex == y {
-			cursor = ">" // cursor!
-		}
-
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
-			checked = "x" // selected!
-		}
-
-		// Render the row
-		s := fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
-		b.WriteString(s)
-	}
-	button := &blurredButton
-	if m.focusIndex == len(m.inputs)+len(m.choices) {
-		button = &focusedButton
-	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
-
-	b.WriteString(helpStyle.Render("cursor mode is "))
-	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
-	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
-
-	return b.String()
-}
+// General stuff for styling the view
+var (
+	keywordStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("211"))
+	subtleStyle           = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	ticksStyle            = lipgloss.NewStyle().Foreground(lipgloss.Color("79"))
+	checkboxStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("212"))
+	focusedStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	cursorStyle           = focusedStyle
+	blurredStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	helpStyle             = blurredStyle
+	dotStyle              = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
+	noStyle               = lipgloss.NewStyle()
+	mainStyle             = lipgloss.NewStyle().MarginLeft(2)
+	focusedNextButton     = focusedStyle.Render("[ Next ]")
+	blurredNextButton     = fmt.Sprintf("[ %s ]", blurredStyle.Render("Next"))
+	focusedGenerateButton = focusedStyle.Render("[ Generate ]")
+	blurredGenerateButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Generate"))
+	cursorModeHelpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+)
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -208,11 +46,17 @@ func main() {
 		Short:   "Generate a WasmCloud component",
 		Aliases: []string{"gen", "g"},
 		Run: func(cmd *cobra.Command, args []string) {
-			_, err := tea.NewProgram(initialModel()).Run()
+			model, err := tea.NewProgram(initiateModel()).Run()
 			if err != nil {
 				fmt.Println("error starting program:", err)
 				os.Exit(1)
 			}
+			modelI := model.(Model)
+			fmt.Println(modelI.CapabilityCatalogue)
+			for _, input := range modelI.Inputs {
+				fmt.Println(input.View())
+			}
+
 			// cue validate schema
 			// componentProject := config.CreateComponentProject(componentConfig)
 			// config.GenerateFilesPrompt(componentProject)
@@ -223,4 +67,216 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+type Model struct {
+	Quitting                  bool
+	NameAndPathEntered        bool
+	NameAndPathCursor         int
+	Inputs                    []textinput.Model
+	CapabilityCatalogueCursor int
+	CapabilityCatalogue       []string
+	SelectedCapabilities      map[int]struct{}
+	Finished                  bool
+}
+
+// start run with initiateModel
+func initiateModel() Model {
+	m := Model{
+		Inputs:               make([]textinput.Model, 2),
+		SelectedCapabilities: make(map[int]struct{}),
+	}
+	m.CapabilityCatalogue = []string{"Nats-core", "Nats-jetstream", "Nats-kv"}
+	var t textinput.Model
+	for i := range m.Inputs {
+		t = textinput.New()
+		t.Cursor.Style = cursorStyle
+		t.CharLimit = 32
+		switch i {
+		case 0:
+			t.Placeholder = "Component name"
+			t.Focus()
+			t.PromptStyle = focusedStyle
+			t.TextStyle = focusedStyle
+		case 1:
+			t.Placeholder = "Path to install (blank for cwd)"
+			t.CharLimit = 64
+		}
+		m.Inputs[i] = t
+	}
+	return m
+}
+
+func (m Model) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+// Main update function.
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Make sure these keys always quit
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		k := msg.String()
+		if k == "q" || k == "ctrl+c" {
+			m.Quitting = true
+			return m, tea.Quit
+		}
+	}
+	if m.NameAndPathEntered {
+		return updateCapabilityCatalogue(msg, m)
+	}
+	return updateNameAndPath(msg, m)
+}
+
+// The main view, which just calls the appropriate sub-view
+func (m Model) View() string {
+	var s string
+	if m.Finished {
+		return "\n Done!\n\n"
+	}
+	if m.Quitting {
+		return "\n Quitting!\n\n"
+	}
+	var enterSelect string
+	if m.NameAndPathEntered {
+		enterSelect = "⏎ / _ : Select"
+		s = capabilitiesView(m)
+	} else {
+		enterSelect = "⏎ : Select"
+		s = nameAndPathView(m)
+	}
+	tpl := "MAP - generate a wasmcloud component\n\n"
+	tpl += "%s"
+	tpl += subtleStyle.Render("↑/↓ : Navigate") + dotStyle +
+		subtleStyle.Render(enterSelect) + dotStyle + subtleStyle.Render("q, ctrl+c : Quit")
+	return mainStyle.Render("\n" + fmt.Sprintf(tpl, s) + "\n\n")
+}
+
+func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "down":
+			m.CapabilityCatalogueCursor++
+		case "up":
+			m.CapabilityCatalogueCursor--
+		case "enter", " ":
+			if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
+				m.Finished = true
+				return m, tea.Quit
+			}
+			if _, ok := m.SelectedCapabilities[m.CapabilityCatalogueCursor]; ok {
+				delete(m.SelectedCapabilities, m.CapabilityCatalogueCursor)
+			} else {
+				m.SelectedCapabilities[m.CapabilityCatalogueCursor] = struct{}{}
+			}
+		}
+	}
+	if m.CapabilityCatalogueCursor < 0 {
+		m.CapabilityCatalogueCursor = len(m.CapabilityCatalogue)
+	}
+	if m.CapabilityCatalogueCursor > len(m.CapabilityCatalogue) {
+		m.CapabilityCatalogueCursor = 0
+	}
+	return m, nil
+}
+
+// Update loop for the second view after a choice has been made
+func updateNameAndPath(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "down", "enter", "up":
+			s := msg.String()
+			if s == "enter" && m.NameAndPathCursor == len(m.Inputs) {
+				m.NameAndPathEntered = true
+				return m, nil
+
+			}
+			if s == "up" {
+				m.NameAndPathCursor--
+			} else {
+				m.NameAndPathCursor++
+			}
+			if m.NameAndPathCursor > len(m.Inputs) {
+				m.NameAndPathCursor = 0
+			} else if m.NameAndPathCursor < 0 {
+				m.NameAndPathCursor = len(m.Inputs)
+			}
+			if m.NameAndPathCursor <= len(m.Inputs) {
+				cmds := make([]tea.Cmd, len(m.Inputs))
+				for i := 0; i <= len(m.Inputs)-1; i++ {
+					if i == m.NameAndPathCursor {
+						// Set focused state
+						cmds[i] = m.Inputs[i].Focus()
+						m.Inputs[i].PromptStyle = focusedStyle
+						m.Inputs[i].TextStyle = focusedStyle
+						continue
+					}
+					// Remove focused state
+					m.Inputs[i].Blur()
+					m.Inputs[i].PromptStyle = noStyle
+					m.Inputs[i].TextStyle = noStyle
+				}
+				return m, tea.Batch(cmds...)
+			}
+		}
+	}
+	cmd := m.updateInputs(msg)
+
+	return m, cmd
+}
+
+func (m *Model) updateInputs(msg tea.Msg) tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.Inputs))
+	for i := range m.Inputs {
+		m.Inputs[i], cmds[i] = m.Inputs[i].Update(msg)
+	}
+
+	return tea.Batch(cmds...)
+}
+
+func capabilitiesView(m Model) string {
+	tpl := "Select capabilities \n\n"
+	tpl += "%s\n\n%s\n\n"
+	var choices string
+	for index, capability := range m.CapabilityCatalogue {
+		cursor := " "
+		if index == m.CapabilityCatalogueCursor {
+			cursor = ">"
+		}
+		_, ok := m.SelectedCapabilities[index]
+		choices += fmt.Sprintf("%s %s\n", cursor, checkbox(capability, ok))
+	}
+	button := &blurredGenerateButton
+	if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
+		button = &focusedGenerateButton
+	}
+	return fmt.Sprintf(tpl, choices, *button)
+}
+
+// The second view, after a task has been chosen
+func nameAndPathView(m Model) string {
+	var b strings.Builder
+
+	for i := range m.Inputs {
+		b.WriteString(m.Inputs[i].View())
+		if i < len(m.Inputs)-1 {
+			b.WriteRune('\n')
+		}
+	}
+
+	button := &blurredNextButton
+	if m.NameAndPathCursor == len(m.Inputs) {
+		button = &focusedNextButton
+	}
+	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+	// b.WriteString(helpStyle.Render("cursor is: " + strconv.Itoa(m.NameAndPathCursor)))
+	return b.String()
+}
+
+func checkbox(label string, checked bool) string {
+	if checked {
+		return checkboxStyle.Render("[x] " + label)
+	}
+	return fmt.Sprintf("[ ] %s", label)
 }
