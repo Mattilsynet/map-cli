@@ -58,10 +58,6 @@ func main() {
 			for _, input := range modelI.Inputs {
 				fmt.Println(input.View())
 			}
-
-			// cue validate schema
-			// componentProject := config.CreateComponentProject(componentConfig)
-			// config.GenerateFilesPrompt(componentProject)
 		},
 	}
 	rootCmd.AddCommand(generate)
@@ -129,11 +125,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return updateNameAndPath(msg, m)
 }
 
-// The main view, which just calls the appropriate sub-view
+// TODO: Make capabilitiesView and namedAndPathView same style, remove cursor display in capabilitiesView and rather highlight same as namedAndPathView
 func (m Model) View() string {
 	var s string
 	if m.Finished {
-		return "\n Done!\n\n"
+		return "\n Done!\n Check README.md in your newly created component for instructions on how to get started. \n\n"
 	}
 	if m.Quitting {
 		return "\n Quitting!\n\n"
@@ -163,6 +159,24 @@ func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 			m.CapabilityCatalogueCursor--
 		case "enter", " ":
 			if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
+				/*  TODO:
+					1. create config from Model
+				        2. generate go files according to selected capabilities, name of component and path to put them
+				        3. Generate wit files
+					4. Generate wadm files
+					5. Generate wasmcloud.toml
+				        6. add sdk files from custom capabilities to go.mod
+					7. Generate working <component-name>-component.go with implemented requirements according to capabilities, e.g., handle etc
+					8. Generate README.md
+					9. Generate LICENSE
+
+					Feature: Add fancy loading bar
+					Feature: Add fancy display of files generated in which folder
+				*/
+
+				// cue validate schema
+				// componentProject := config.CreateComponentProject(componentConfig)
+				// config.GenerateFilesPrompt(componentProject)
 				m.Finished = true
 				return m, tea.Quit
 			}
