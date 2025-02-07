@@ -79,7 +79,7 @@ func (a *Auth) AuthURL() string {
 func (a *Auth) Login() error {
 	err := a.requestDeviceCode()
 	if err != nil {
-		return fmt.Errorf("Failed to request device code:", err)
+		return fmt.Errorf("failed to request device code: %s", err)
 	}
 
 	fmt.Println(a.deviceCode.Message)

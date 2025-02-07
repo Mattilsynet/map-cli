@@ -20,33 +20,9 @@ import (
 )
 
 var (
-	clientID       string
-	tenantID       string
-	clientCertPath string
-	authURL        string = "https://login.microsoftonline.com/" + tenantID + "/oauth2/v2.0"
+	clientID string
+	tenantID string
 )
-
-var (
-	azureScopes           []string = []string{"https://graph.microsoft.com/.default"}
-	azureManagementScopes []string = []string{"https://management.azure.com/.default"}
-)
-
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	IDToken      string `json:"id_token"` // Extract ID Token
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
-type DeviceCodeResponse struct {
-	DeviceCode      string `json:"device_code"`
-	UserCode        string `json:"user_code"`
-	VerificationURI string `json:"verification_uri"`
-	ExpiresIn       int    `json:"expires_in"`
-	Interval        int    `json:"interval"`
-	Message         string `json:"message"`
-}
 
 var azureCmd = &cobra.Command{
 	Use:   "azure",
