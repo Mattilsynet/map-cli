@@ -37,6 +37,9 @@ type AuthOption func(*Auth)
 
 func New(options ...AuthOption) (*Auth, error) {
 	azureAuth := &Auth{}
+	azureAuth.token = &TokenResponse{}
+	azureAuth.deviceCode = &DeviceCodeResponse{}
+
 	for _, option := range options {
 		option(azureAuth)
 	}
@@ -87,7 +90,7 @@ func (a *Auth) Login() error {
 	// Step 2: Poll for token response
 	pollErr := a.pollForToken()
 	if pollErr != nil {
-		return fmt.Errorf("Failed to obtain token:", pollErr)
+		return fmt.Errorf("failed to obtain token: %s", pollErr)
 	}
 	return nil
 }
@@ -98,6 +101,18 @@ func (a *Auth) IDToken() string {
 
 func (a *Auth) AccessToken() string {
 	return a.token.AccessToken
+}
+
+func (a *Auth) RefreshToken() string {
+	return a.token.RefreshToken
+}
+
+func (a *Auth) TokenType() string {
+	return a.token.TokenType
+}
+
+func (a *Auth) ExpiresIn() int {
+	return a.token.ExpiresIn
 }
 
 func (a *Auth) requestDeviceCode() error {

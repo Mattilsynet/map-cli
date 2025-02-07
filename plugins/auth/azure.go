@@ -1,14 +1,3 @@
-/*
-	This should be moved elsewhere but, need to doc this somewhere.
-
-	On a Mac, execute the following to find the intune mdm client certificate:
-
-	security find-certificate -a -c "IntuneMDM" -p > client-cert.pem
-	security export -k -t priv -p -c "IntuneMDM" -o private_key.pem
-
-
-*/
-
 package main
 
 import (
@@ -36,10 +25,9 @@ var azureCmdLogin = &cobra.Command{
 	Use:   "login",
 	Short: "Login with device code flow",
 	Run: func(cmd *cobra.Command, args []string) {
-		auth, err := azureauth.Auth(
+		auth, err := azureauth.New(
 			azureauth.WithTenantID(tenantID),
 			azureauth.WithClientID(clientID),
-		//	azureauth.WithScopes(azureScopes))
 		)
 		if err != nil {
 			fmt.Println(err)
@@ -50,8 +38,10 @@ var azureCmdLogin = &cobra.Command{
 			fmt.Println(loginErr)
 			os.Exit(1)
 		}
-		fmt.Println("idtoken:", auth.IdToken())
+		fmt.Println("token type:", auth.TokenType())
+		fmt.Println("idtoken:", auth.IDToken())
 		fmt.Println("accesstoken:", auth.AccessToken())
+		fmt.Println("token expires in:", auth.ExpiresIn())
 	},
 }
 
