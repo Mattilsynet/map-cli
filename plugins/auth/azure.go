@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Mattilsynet/map-cli/azure-auth/pkg/auth/azureauth"
+	"github.com/Mattilsynet/map-cli/pkg/auth/azureauth"
 	"github.com/spf13/cobra"
 )
 
