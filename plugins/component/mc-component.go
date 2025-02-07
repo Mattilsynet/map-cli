@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Mattilsynet/map-cli/plugins/component/component"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -56,7 +57,7 @@ func main() {
 				fmt.Println("Selected capability: ", modelI.CapabilityCatalogue[index])
 			}
 			for _, input := range modelI.Inputs {
-				fmt.Println(input.View())
+				fmt.Println(input.Value())
 			}
 		},
 	}
@@ -81,9 +82,10 @@ type Model struct {
 // start run with initiateModel
 func initiateModel() Model {
 	m := Model{
-		Inputs:               make([]textinput.Model, 2),
+		Inputs:               make([]textinput.Model, 3),
 		SelectedCapabilities: make(map[int]struct{}),
 	}
+	// TODO: Fetch options from componentConfig instead of duplicating places where capabilities are mentioned
 	m.CapabilityCatalogue = []string{"Nats-core", "Nats-jetstream", "Nats-kv"}
 	var t textinput.Model
 	for i := range m.Inputs {
@@ -93,11 +95,16 @@ func initiateModel() Model {
 		switch i {
 		case 0:
 			t.Placeholder = "Component name"
+			t.SetSuggestions([]string{"my-component", "map-managed-environment"})
 			t.Focus()
 			t.PromptStyle = focusedStyle
 			t.TextStyle = focusedStyle
 		case 1:
+			t.Placeholder = "Git repository"
+			t.SetSuggestions([]string{"github.com/Mattilsynet/map-managed-environment"})
+		case 2:
 			t.Placeholder = "Path to install (blank for cwd)"
+			t.SetSuggestions([]string{"/home/my-user/git/my-component/"})
 			t.CharLimit = 64
 		}
 		m.Inputs[i] = t
@@ -159,8 +166,13 @@ func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 			m.CapabilityCatalogueCursor--
 		case "enter", " ":
 			if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
+				config := component.Config{}
+				config.ComponentName = m.Inputs[0].Value()
+				config.Path = m.Inputs[1].Value()
+				for index := range m.SelectedCapabilities {
+					config.Capabilities = append(config.Capabilities, m.CapabilityCatalogue[index])
+				}
 				/*  TODO:
-					1. create config from Model
 				        2. generate go files according to selected capabilities, name of component and path to put them
 				        3. Generate wit files
 					4. Generate wadm files
@@ -196,7 +208,7 @@ func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// Update loop for the second view after a choice has been made
+// TODO: Make path give help on how to navigate, i.e., ctrl + space yields cwd and picker
 func updateNameAndPath(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -276,6 +288,7 @@ func nameAndPathView(m Model) string {
 
 	for i := range m.Inputs {
 		b.WriteString(m.Inputs[i].View())
+		// TODO: put in examples when user presses 'h' to show underneath prompt text lines
 		if i < len(m.Inputs)-1 {
 			b.WriteRune('\n')
 		}

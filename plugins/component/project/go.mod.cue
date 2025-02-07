@@ -8,7 +8,7 @@ import (
 module: template.Execute(file, Data)
 
 file: """
-	module github.com/Mattilsynet/{{.repository}}
+	module {{.repository}}
 	go 1.23.2
 	
 	require go.wasmcloud.dev/component v0.0.5
