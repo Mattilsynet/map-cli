@@ -12,16 +12,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"time"
 
-	"github.com/Mattilsynet/azure-auth/pkg/auth/azureauth"
-	"github.com/Mattilsynet/map-cli/pkg/auth/azureauth"
+	"github.com/Mattilsynet/map-cli/azure-auth/pkg/auth/azureauth"
 	"github.com/spf13/cobra"
 )
 
