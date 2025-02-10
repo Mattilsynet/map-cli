@@ -1,14 +1,15 @@
 package component
 
 import (
-	"log"
 	"testing"
 )
 
 func TestGenerateComponent(t *testing.T) {
-	log.Println("hey")
 	config := Config{
-		Path: "../project/go.mod.cue",
+		Path:          "/home/solve/git/temp",
+		ComponentName: "test-component",
+		Repository:    "github.com/Mattilsynet/test-component",
+		Capabilities:  []string{"nats-core", "nats-jetstream"},
 	}
-	GenerateComponent(config)
+	GenerateApp(config)
 }

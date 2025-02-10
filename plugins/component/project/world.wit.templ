@@ -1,0 +1,11 @@
+package {{ .WitPackage }}:{{ .ComponentName }};
+
+world {{ .ComponentName }} {
+  include wasmcloud:component-go/imports@0.1.0;
+  {{ .ImportNatsCoreWit }}
+  {{ .ExportNatsCore-Wit }}
+  {{ .ImportNatsJetstream-Wit }}
+  {{ .ExportNatsJetstream-Wit }}
+  {{ .Import-NatsKvWit }}
+  //nats-kv watch keys hasn't been implemented yet in github.com/Mattilsynet/map-nats-kv
+}
