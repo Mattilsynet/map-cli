@@ -26,7 +26,7 @@ var localWadmYamltempl string
 //go:embed tools.go.templ
 var toolsGotempl string
 
-var templs = map[string]string{
+var Templs = map[string]string{
 	"go.mod":          goModtempl,
 	"component.go":    componentGotempl,
 	"wadm.yaml":       wadmYamltempl,

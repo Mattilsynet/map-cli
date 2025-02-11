@@ -28,7 +28,7 @@ func GenerateApp(config Config) error {
 	GenerateGitIgnore()
 	GenerateGithubWorkflow()
 	*/
-	mapOfContent, err := ReadAllTemplateFiles(config, project.Tmpls)
+	mapOfContent, err := ReadAllTemplateFiles(config, project.Templs)
 	if err != nil {
 		return err
 	}
