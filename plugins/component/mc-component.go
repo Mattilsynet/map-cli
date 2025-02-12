@@ -125,6 +125,7 @@ func initiateConfigPrompt() *Model {
 			t.TextStyle = focusedStyle
 		case 1:
 			t.Placeholder = "Git repository"
+			t.CharLimit = 64
 			t.SetSuggestions([]string{"github.com/Mattilsynet/map-managed-environment"})
 		case 2:
 			t.Placeholder = "Path to install (blank for cwd)"
@@ -194,27 +195,25 @@ func (m Model) View() string {
 }
 
 func validationErr(m Model) string {
-	err := "error: %s"
-	switch m.NameAndPathCursor {
-	case 1: // Component name
+	pick := m.NameAndPathCursor
+	if pick > 0 {
 		if m.Inputs[0].Value() == "" {
-			return fmt.Sprintf(err, "component name is empty")
+			return "error: component name is empty"
 		}
-	
-	case 2: // Git repository
-			if m.Inputs[1].Value() == "" {
-                     return "error: git repository is empty"
 	}
-	path := m.Inputs[2].Value()
-	if path == "" {
-		return ""
+	if pick > 1 {
+		if m.Inputs[1].Value() == "" {
+			return "error: git repository is empty, e.g., github.com/Mattilsynet/my-component"
+		}
 	}
-	if m.NameAndPathCursor == 2 {
-		return ""
+	if pick > 2 {
+		if m.Inputs[2].Value() == "" {
+			return "error: path is empty, e.g., /home/user/git/my-component"
+		} else if !filepath.IsAbs(m.Inputs[2].Value()) {
+			return "error: path is not absolute, e.g., /home/user/git/my-component"
+		}
 	}
-	if !filepath.IsAbs(path) {
-		return "error: path is not absolute, e.g., /home/user/git/my-component"
-	}
+
 	return ""
 }
 
