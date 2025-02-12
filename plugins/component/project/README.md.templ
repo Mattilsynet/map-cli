@@ -1,20 +1,43 @@
-# {{ .ComponentName }}
+## {{ .ComponentName }}
 
 ## Description
 This wasmcloud component is responsible for ...
 
 ## Disclaimer
-1. Not ment for repositories which are private or internal
+1. Ment for public repositories
 
 ## Pre-requisits
 
-1. wash-cli
-2. wit-deps
-3. wit-bindgen-go (wash-tools)
+1. wash-cli  
+2. wit-deps  
+3. wit-bindgen-go (wash-tools)  
 
 A solution is to install `cargo` and `cargo-binstall`, and then `cargo binstall wash-cli, wit-deps`
 
-## Installation
+## First build
+1. `wit-deps`  
+2. `mkdir gen`  
+3. `wit-bindgen-go generate --world {{ .ComponentName }} --out gen ./wit`  
+4. `go mod tidy`  
+5. wash build
+
+## First run
+1. wash up in one terminal (hereby refered to as terminal 1)  
+2. NATS_URL=nats://localhost:4222 nats kv add my-bucket  (terminal 2)  
+3. wash app deploy local.wadm.yaml (terminal 2)  
+4. wash app list (terminal 2)  
+5. wash app status {{.ComponentName}} (terminal 2)  
+
+## Development
+1. Open component.go (some examples are shown on how to register request/reply, subscription or consumer depending on your choices for capabilities)  
+2. Use logger for logging to wash  
+3. Use nats variable for pub/sub or req/reply  
+4. Use js variable for jetstream publish  
+5. Use kv variable for key value store
+
+## Problems?
+1. Instead of `wash up`, run `WASMTIME_BACKTRACE_DETAILS=1 RUST_LOG=debug wash up`  
+2. Make an issue at github.com/Mattilsynet/map-cli  
 
 ## First time git tag push, do this before any github actions run
 1. Goto your github repository
@@ -25,5 +48,4 @@ A solution is to install `cargo` and `cargo-binstall`, and then `cargo binstall 
 ## CI/CD
 Uses github actions for CI/CD, check `.github/workflows`
 ## Authors
-
 

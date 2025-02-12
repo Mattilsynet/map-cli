@@ -1,59 +1,73 @@
-//go:generate go run github.com/bytecodealliance/wasm-tools-go/cmd/wit-bindgen-go generate --world {{ .ComponentName }} --out gen ./wit
+//go:generate go run github.com/bytecodealliance/wasm-tools-go/cmd/wit-bindgen-go generate -world {{ .ComponentName }} -out gen ./wit
 package main
 
 import (
 	"log/slog"
+	
 	"go.wasmcloud.dev/component/log/wasilog"	
-	"{.Repository}/pkg/nats"
+	"{{ .Repository }}/pkg/nats"
 )
 var (
 	logger *slog.Logger
-	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream }}
+	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream -}}
 	conn *nats.Conn
-	{{ end }}
-	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue }}
-	js *nats.JetstreamContext
-	{{ end }}
-	{{ if .ComponentNatsKeyValue }}
+	{{ end -}}
+	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
+	js *nats.JetStreamContext
+	{{ end -}}
+	{{ if .ComponentNatsKeyValue -}}
 	kv *nats.KeyValue
 	{{ end }}
-}
-func init() 
+)
+func init() { 
 	logger = wasilog.ContextLogger("{{ .ComponentName }}")
-	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream }}
+	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream -}}
 	conn := nats.NewConn()
-        {{ end }}
-	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue}}
+        {{ end -}}
+	{{ if .ExportNatsCoreRequestReplyWit -}}
+	conn.RegisterRequestReply({{.ComponentName}}RequestReplier)
+	{{ end -}}
+	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
 	var err error
 	js, err = conn.Jetstream()
 	if err != nil {
 		logger.Error("error getting jetstreamcontext", "err", err)
 		return
 	}
-	{{ end }}
-	{{ if .ComponentNatsKeyValue }}
+	{{ end -}}
+	{{ if .ComponentNatsKeyValue -}}
 	kv, err = js.KeyValue()
 	if kv == nil {
 		logger.Error("error getting keyvalue", "err", err)
 		return
 	}
-	{{ if .ComponentNatsJetstream}}
+	{{ end -}}
+	{{ if .ExportNatsJetstreamWit -}}
         js.Subscribe({{.ComponentName}}Consumer, logger)	
 	{{ end }}
 }
-
-
-{{if .ComponentNatsJetstream}}
-func {{.ComponentName}}Consumer(msg *nats.Msg) {
+{{ if .ExportNatsJetstreamWit }}
+func {{ .ComponentName }}Consumer(msg *nats.Msg) {
 // this is where you put your application logic when a nats msg arrives at specified stream subject from wadm.yaml
 // here you can use nats.Publish or kv.Get, etc depending on what you asked for
 }
-{{end}}
-{{if .WitExportNatsCore}}
-func {{.ComponentName}}Subscriber(msg *nats.Msg) {
+{{ end }}
+{{ if .ExportNatsCoreRequestReplyWit }}
+func {{.ComponentName}}RequestReplier(msg *nats.Msg) *nats.Msg {
+// here you'll read from incomming msg and take out the msg.Reply and put into your own created msg
+// and return it, and the provider will take it from there
+replyMsg := &nats.Msg{
+		Subject: msg.Reply,
+		Data:    msg.Data,
+	}
+return replyMsg
+}
+{{ end }}
+{{ if .ExportNatsCoreWit }}
+func {{ .ComponentName }}Subscriber(msg *nats.Msg) {
 // this is where you put your application logic when a nats msg arrives at specified subject, specified under wadm.yaml nats-core 'subscriptions'
 // here you can use nats.Publish or kv.Get, etc depending on what you asked for
 }
-{{end}}
+{{ end }}
 //main should never be used in a wasm component, everything inside init()
 func main() {}

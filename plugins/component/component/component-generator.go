@@ -3,6 +3,7 @@ package component
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"text/template"
 
@@ -10,30 +11,13 @@ import (
 )
 
 func GenerateApp(config Config) error {
-	/*  TODO:
-	        2. generate go files according to selected capabilities, name of component and path to put them
-	        3. Generate wit files
-		4. Generate wadm files
-	        6. add sdk files from custom capabilities to go.mod
-		7. Generate working <component-name>-component.go with implemented requirements according to capabilities, e.g., handle etc
-		8. Generate README.md
-		9. Generate LICENSE
-	GenerateGoMod()
-	GenerateToolsWithSDKs()
-	GenerateComponent()
-	GenerateWITWorld()
-	GenerateWasmcloudToml()
-	GenerateLocalWadm()
-	GenerateReadme()
-	GenerateGitIgnore()
-	GenerateGithubWorkflow()
-	*/
 	mapOfContent, err := ReadAllTemplateFiles(config, project.Templs)
 	if err != nil {
 		return err
 	}
 	err = GenerateFiles(config.Path, mapOfContent)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -42,12 +26,16 @@ func GenerateApp(config Config) error {
 
 func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error {
 	for path, content := range mapOfContent {
-		fullPath := projectRootPath + "/" + path
-		if err := os.MkdirAll(getDirFromPath(fullPath), 0o755); err != nil {
-			return err
-		}
-		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
-			return fmt.Errorf("failed to write file %s: %v", fullPath, err)
+		// INFO: Only make files if content from templating is not empty
+		if content != "" && content != "\n" {
+			fullPath := projectRootPath + "/" + path
+			if err := os.MkdirAll(getDirFromPath(fullPath), 0o755); err != nil {
+				log.Println(err)
+				return err
+			}
+			if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+				return fmt.Errorf("failed to write file %s: %v", fullPath, err)
+			}
 		}
 	}
 	return nil
@@ -71,6 +59,7 @@ func ReadAllTemplateFiles(config Config, tmpls map[string]string) (map[string]st
 	for key, tmpl := range tmpls {
 		txtFile, err := ExecuteTmplWithData(config, tmpl)
 		if err != nil {
+			log.Println("error reading file: ", key, " with error: ", err)
 			return nil, err
 		}
 		mapOfContent[key] = txtFile
@@ -78,8 +67,8 @@ func ReadAllTemplateFiles(config Config, tmpls map[string]string) (map[string]st
 	return mapOfContent, nil
 }
 
-func ExecuteTmplWithData(data interface{}, tmplFile string) (string, error) {
-	tmpl, err := template.New("module").Parse(tmplFile)
+func ExecuteTmplWithData(data interface{}, tmplContent string) (string, error) {
+	tmpl, err := template.New("module").Parse(tmplContent)
 	if err != nil {
 		return "", err
 	}

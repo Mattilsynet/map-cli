@@ -1,11 +1,23 @@
-package {{ .WitPackage }}:{{ .ComponentName }};
+package {{ .WitPackage }};
 
-world {{ .ComponentName }} {
+world {{ .WitComponentName -}} {
+  //wasmcloud-go sdk for ease of logging and other goodies
   include wasmcloud:component-go/imports@0.1.0;
-  {{ .ImportNatsCoreWit }}
-  {{ .ExportNatsCore-Wit }}
-  {{ .ImportNatsJetstream-Wit }}
-  {{ .ExportNatsJetstream-Wit }}
-  {{ .Import-NatsKvWit }}
+  
+  {{ if or .ImportNatsCoreWit .ExportNatsCoreWit -}}
+  import wasmcloud:messaging/consumer@0.2.0;
+  {{ end -}}
+  {{ if .ExportNatsCoreWit -}}
+  export wasmcloud:messaging/handler@0.2.0;
+  {{ end }}
+  {{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
+  import mattilsynet:provider-jetstream-nats/jetstream-publish;
+  {{ end -}}
+  {{ if .ExportNatsJetstreamWit -}}
+  export mattilsynet:provider-jetstream-nats/jetstream-consumer;
+  {{ end }}
+  {{ if .ImportNatsKvWit -}}
   //nats-kv watch keys hasn't been implemented yet in github.com/Mattilsynet/map-nats-kv
+  import mattilsynet:map-kv/key-value;
+  {{ end }}
 }

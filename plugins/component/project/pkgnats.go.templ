@@ -1,0 +1,115 @@
+{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue .ComponentNatsCore -}}
+package nats
+import (
+	"errors"
+	"{{ .Repository }}/gen/wasmcloud/messaging/consumer"
+	"{{ .Repository }}/gen/wasmcloud/messaging/handler"
+	"{{ .Repository }}/gen/wasmcloud/messaging/types"
+	"github.com/bytecodealliance/wasm-tools-go/cm"
+)
+type (
+	Conn struct {
+        {{ if .ComponentNatsJetstream -}}
+		  js JetStreamContext
+	{{ end -}}
+	}
+	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
+	JetStreamContext struct {
+		{{ if .ImportNatsKvWit -}}
+		bucket KeyValue
+		{{ end -}}
+	{{ end -}}
+	}
+
+	Msg struct {
+		Subject string
+		Reply   string
+		Data    []byte
+		Header  map[string][]string
+	}
+)
+
+func NewConn() *Conn {
+	return &Conn{}
+}
+{{ if .ExportNatsCoreWit -}}
+type MsgHandler func(msg *Msg)
+
+
+
+{{ end -}}
+
+{{ if .ExportNatsCoreWit -}}
+func FromBrokerMessageToNatsMessage(bm types.BrokerMessage) *Msg {
+	if bm.ReplyTo.None() {
+		return &Msg{
+			Data:    bm.Body.Slice(),
+			Subject: bm.Subject,
+			Reply:   "",
+		}
+	} else {
+		return &Msg{
+			Data:    bm.Body.Slice(),
+			Subject: bm.Subject,
+			Reply:   *bm.ReplyTo.Some(),
+		}
+	}
+}
+{{ end }}
+
+func ToBrokenMessageFromNatsMessage(nm *Msg) types.BrokerMessage {
+	if nm.Reply == "" {
+		return types.BrokerMessage{
+			Subject: nm.Subject,
+			Body:    cm.ToList(nm.Data),
+			ReplyTo: cm.None[string](),
+		}
+	} else {
+		return types.BrokerMessage{
+			Subject: nm.Subject,
+			Body:    cm.ToList(nm.Data),
+			ReplyTo: cm.Some(nm.Subject),
+		}
+	}
+}
+
+func (nc *Conn) Publish(msg *Msg) error {
+	bm := ToBrokenMessageFromNatsMessage(msg)
+	result := consumer.Publish(bm)
+	if result.IsErr() {
+		return errors.New(*result.Err())
+	}
+	return nil
+}
+
+{{ if .ExportNatsCoreRequestReplyWit -}}
+func (conn *Conn) RequestReply(msg *Msg, timeoutInMillis uint32) (*Msg, error) {
+	bm := ToBrokenMessageFromNatsMessage(msg)
+	result := consumer.Request(bm.Subject, bm.Body, timeoutInMillis)
+	if result.IsOK() {
+		bmReceived := result.OK()
+		natsMsgReceived := FromBrokerMessageToNatsMessage(*bmReceived)
+		return natsMsgReceived, nil
+	} else {
+		return nil, errors.New(*result.Err())
+	}
+}
+
+func (conn *Conn) RegisterRequestReply(fn func(*Msg) *Msg) {
+	handler.Exports.HandleMessage = func(msg types.BrokerMessage) (result cm.Result[string, struct{}, string]) {
+		natsMsg := FromBrokerMessageToNatsMessage(msg)
+		newMsg := fn(natsMsg)
+		return consumer.Publish(ToBrokenMessageFromNatsMessage(newMsg))
+	}
+}
+{{ end -}}
+{{ if .ExportNatsCoreWit -}}
+func (conn *Conn) RegisterSubscription(fn func(*Msg)) {
+	handler.Exports.HandleMessage = func(msg types.BrokerMessage) (result cm.Result[string, struct{}, string]) {
+		natsMsg := FromBrokerMessageToNatsMessage(msg)
+		fn(natsMsg)
+		return cm.OK[cm.Result[string, struct{}, string]](struct{}{})
+	}
+}
+{{ end }}
+{{ end }}

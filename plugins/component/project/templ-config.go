@@ -26,13 +26,29 @@ var localWadmYamltempl string
 //go:embed tools.go.templ
 var toolsGotempl string
 
+//go:embed pkgnats.go.templ
+var pkgNatsGoTempl string
+
+//go:embed pkgnatskv.go.templ
+var pkgNatsKvTempl string
+
+//go:embed pkgnatsjs.go.templ
+var pkgNatsJsTempl string
+
+//go:embed deps.toml.templ
+var depsTomlTempl string
+
 var Templs = map[string]string{
-	"go.mod":          goModtempl,
-	"component.go":    componentGotempl,
-	"wadm.yaml":       wadmYamltempl,
-	"local.wadm.yaml": localWadmYamltempl,
-	"tools.go":        toolsGotempl,
-	"wasmcloud.toml":  wasmcloudTomltempl,
-	"README.md":       readmeMdtempl,
-	"wit/world.wit":   worldWittempl,
+	"go.mod":           goModtempl,
+	"component.go":     componentGotempl,
+	"wadm.yaml":        wadmYamltempl,
+	"local.wadm.yaml":  localWadmYamltempl,
+	"tools.go":         toolsGotempl,
+	"wasmcloud.toml":   wasmcloudTomltempl,
+	"README.md":        readmeMdtempl,
+	"wit/world.wit":    worldWittempl,
+	"pkg/nats/nats.go": pkgNatsGoTempl,
+	"pkg/nats/kv.go":   pkgNatsKvTempl,
+	"pkg/nats/js.go":   pkgNatsJsTempl,
+	"wit/deps.toml":    depsTomlTempl,
 }

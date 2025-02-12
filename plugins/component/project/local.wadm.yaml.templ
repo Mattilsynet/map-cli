@@ -1,1 +1,109 @@
-#
+# Intended for local development with wash up and nats running on port 4222
+
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: {{ .ComponentName }}
+  annotations:
+    version: v0.0.1
+# Change description to something which suits your application
+    description: "description"
+# Change authors to yourself to begin with
+    authors: "authors"
+spec:
+  components:
+    - name: {{ .ComponentName }}
+      type: component
+      properties:
+        image: file://./build/{{ .ComponentName }}_s.wasm
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
+{{ if .ExportNatsCoreWit -}}
+# Link component with nats-core to get publishing capability
+        - type: link
+          properties:
+            target:
+              name: nats-core
+            namespace: wasmcloud
+            package: messaging
+            interfaces: [consumer]
+{{ end -}}
+{{ if .ImportNatsKvWit -}}
+# Link the component to nats-kv to get [Get, GetAll, Put, Create, Delete] capabilites, important to setup your kv in the nats instance running
+        - type: link
+          properties:
+            target:
+              name: map-nats-kv
+              config:
+                - name: map-nats-kv-config
+                  properties:
+                    bucket: "my-bucket"
+                    url: "nats://localhost:4222"
+            namespace: mattilsynet
+            package: map-kv
+            interfaces: [key-value]
+{{ end -}}
+{{ if or .ImportNatsCoreWit .ExportNatsCoreWit -}}
+# Setup nats-core provider, such that it's deployed to the wadm server and made available for this application for linking 
+    - name: nats-core
+      type: capability
+      properties:
+        image: ghcr.io/wasmcloud/messaging-nats:canary
+        config:
+          - name: nats-core-config
+            properties:
+              cluster_uris: "nats://localhost:4222"
+      traits:
+        - type: spreadscalar
+          properties:
+            replicas: 1
+{{ end -}}
+{{ if .ImportNatsJetstreamWit -}}
+# linking such that nats-jetstream provider supplies js.publish capability to component
+        - type: link
+          properties:
+            target:
+              name: nats-jetstream
+              config:
+                - name: nats-jetstream-config
+                  properties:
+                    url: "nats://localhost:4222"
+            namespace: mattilsynet
+            package: provider-jetstream-nats
+            interfaces: [jetstream-publish]
+{{ end }}
+{{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
+# Nats Jetstream provider, provides consumer possibilities, look in source config underneath
+    - name: nats-jetstream
+      type: capability
+      properties:
+        image: ghcr.io/Mattilsynet/map-nats-jetstream:v0.0.1-pre-17
+      traits:
+        - type: link
+          properties:
+            target:
+              name: {{ .ComponentName }}
+            source:
+              config:
+                - name: nats-jetstream-nats-url
+                  properties:
+                    url: "nats://localhost:4222"
+                - name: nats-jetstream-consumer-config
+                  properties:
+                    stream-name: "stream-name"
+                    stream-retention-policy: "workqueue" # oneof "interest, workqueue, limits"
+                    subject: "special.subject.>"
+                    durable-consumer-name: "{{ .ComponentName }}-consumer"
+            namespace: mattilsynet
+            package: provider-jetstream-nats
+            interfaces: [jetstream-consumer]
+{{ end -}}
+{{ if .ImportNatsKvWit -}}
+# Nats KV provider, look in component target for configuration example, OBS! watch-key not implemented as of 12.02.2025 
+    - name: map-nats-kv
+      type: capability
+      properties:
+        image: ghcr.io/mattilsynet/map-nats-kv:v0.0.2-pre-9
+{{ end }}
