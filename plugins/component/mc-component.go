@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Mattilsynet/map-cli/plugins/component/component"
@@ -20,6 +21,7 @@ const (
 var (
 	keywordStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("211"))
 	subtleStyle           = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	errorStyle            = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 	ticksStyle            = lipgloss.NewStyle().Foreground(lipgloss.Color("79"))
 	checkboxStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("212"))
 	focusedStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -47,18 +49,13 @@ func main() {
 		Short:   "Generate a WasmCloud component",
 		Aliases: []string{"gen", "g"},
 		Run: func(cmd *cobra.Command, args []string) {
-			model, err := tea.NewProgram(initiateModel()).Run()
+			m, err := tea.NewProgram(initiateConfigPrompt()).Run()
 			if err != nil {
 				fmt.Println("error starting program:", err)
 				os.Exit(1)
 			}
-			modelI := model.(Model)
-			for index := range modelI.SelectedCapabilities {
-				fmt.Println("Selected capability: ", modelI.CapabilityCatalogue[index])
-			}
-			for _, input := range modelI.Inputs {
-				fmt.Println(input.Value())
-			}
+			model := m.(*Model)
+			component.GenerateApp(model.Config)
 		},
 	}
 	rootCmd.AddCommand(generate)
@@ -68,25 +65,52 @@ func main() {
 	}
 }
 
+type provider struct {
+	name         string
+	capabilities []*capability
+}
+type capability struct {
+	name     string
+	selected bool
+}
+
 type Model struct {
 	Quitting                  bool
 	NameAndPathEntered        bool
 	NameAndPathCursor         int
 	Inputs                    []textinput.Model
 	CapabilityCatalogueCursor int
-	CapabilityCatalogue       []string
-	SelectedCapabilities      map[int]struct{}
+	ProviderCatalogue         []provider
+	LenCapabilities           int
 	Finished                  bool
+	Config                    *component.Config
 }
 
-// start run with initiateModel
-func initiateModel() Model {
-	m := Model{
-		Inputs:               make([]textinput.Model, 3),
-		SelectedCapabilities: make(map[int]struct{}),
-	}
+const (
+	notSelected bool = false
+	selected    bool = true
+)
+
+// start run with initiateConfigPrompt
+func initiateConfigPrompt() *Model {
+	m := Model{}
 	// TODO: Fetch options from componentConfig instead of duplicating places where capabilities are mentioned
-	m.CapabilityCatalogue = []string{"Nats-core", "Nats-jetstream", "Nats-kv"}
+	m.ProviderCatalogue = []provider{
+		{
+			"nats-core",
+			[]*capability{{"publish", notSelected}, {"subscription", notSelected}, {"request/reply", notSelected}},
+		},
+		{
+			"nats-jetstream",
+			[]*capability{{"publish", notSelected}, {"consumer", notSelected}},
+		},
+		{
+			"nats-kv",
+			[]*capability{{"key-value", notSelected}},
+		},
+	}
+	m.LenCapabilities = countCapabilities(m.ProviderCatalogue)
+	m.Inputs = make([]textinput.Model, 3)
 	var t textinput.Model
 	for i := range m.Inputs {
 		t = textinput.New()
@@ -109,7 +133,17 @@ func initiateModel() Model {
 		}
 		m.Inputs[i] = t
 	}
-	return m
+	return &m
+}
+
+func countCapabilities(provider []provider) int {
+	count := 0
+	for _, p := range provider {
+		for range p.capabilities {
+			count++
+		}
+	}
+	return count
 }
 
 func (m Model) Init() tea.Cmd {
@@ -127,7 +161,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	if m.NameAndPathEntered {
-		return updateCapabilityCatalogue(msg, m)
+		return updateCapabilityCatalogue(msg, &m)
 	}
 	return updateNameAndPath(msg, m)
 }
@@ -136,7 +170,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	var s string
 	if m.Finished {
-		return "\n Done!\n Check README.md in your newly created component for instructions on how to get started. \n\n"
+		return ""
 	}
 	if m.Quitting {
 		return "\n Quitting!\n\n"
@@ -153,10 +187,38 @@ func (m Model) View() string {
 	tpl += "%s"
 	tpl += subtleStyle.Render("↑/↓ : Navigate") + dotStyle +
 		subtleStyle.Render(enterSelect) + dotStyle + subtleStyle.Render("q, ctrl+c : Quit")
+	if err := validationErr(m); err != "" {
+		tpl += "\n\n" + errorStyle.Render(err)
+	}
 	return mainStyle.Render("\n" + fmt.Sprintf(tpl, s) + "\n\n")
 }
 
-func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+func validationErr(m Model) string {
+	err := "error: %s"
+	switch m.NameAndPathCursor {
+	case 1: // Component name
+		if m.Inputs[0].Value() == "" {
+			return fmt.Sprintf(err, "component name is empty")
+		}
+	
+	case 2: // Git repository
+			if m.Inputs[1].Value() == "" {
+                     return "error: git repository is empty"
+	}
+	path := m.Inputs[2].Value()
+	if path == "" {
+		return ""
+	}
+	if m.NameAndPathCursor == 2 {
+		return ""
+	}
+	if !filepath.IsAbs(path) {
+		return "error: path is not absolute, e.g., /home/user/git/my-component"
+	}
+	return ""
+}
+
+func updateCapabilityCatalogue(msg tea.Msg, m *Model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -165,12 +227,18 @@ func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 		case "up":
 			m.CapabilityCatalogueCursor--
 		case "enter", " ":
-			if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
-				config := component.Config{}
+			// INFO: we're at generate button and must now wrap up what's selected into a usable config
+			if m.CapabilityCatalogueCursor == m.LenCapabilities {
+				config := &component.Config{}
 				config.ComponentName = m.Inputs[0].Value()
 				config.Path = m.Inputs[1].Value()
-				for index := range m.SelectedCapabilities {
-					config.Capabilities = append(config.Capabilities, m.CapabilityCatalogue[index])
+				for _, provider := range m.ProviderCatalogue {
+					for _, capability := range provider.capabilities {
+						if capability.selected {
+							// INFO: We append provider prefix such that the permutation is unique, think nats-core:publish vs nats-jetstream:publish
+							config.Capabilities = append(config.Capabilities, provider.name+":"+capability.name)
+						}
+					}
 				}
 				/*  TODO:
 				        2. generate go files according to selected capabilities, name of component and path to put them
@@ -185,27 +253,33 @@ func updateCapabilityCatalogue(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 					Feature: Add fancy loading bar
 					Feature: Add fancy display of files generated in which folder
 				*/
-
-				// cue validate schema
-				// componentProject := config.CreateComponentProject(componentConfig)
-				// config.GenerateFilesPrompt(componentProject)
 				m.Finished = true
+				m.Config = config
 				return m, tea.Quit
 			}
-			if _, ok := m.SelectedCapabilities[m.CapabilityCatalogueCursor]; ok {
-				delete(m.SelectedCapabilities, m.CapabilityCatalogueCursor)
-			} else {
-				m.SelectedCapabilities[m.CapabilityCatalogueCursor] = struct{}{}
-			}
+			checkOrUnheck(m)
 		}
 	}
 	if m.CapabilityCatalogueCursor < 0 {
-		m.CapabilityCatalogueCursor = len(m.CapabilityCatalogue)
+		m.CapabilityCatalogueCursor = m.LenCapabilities
 	}
-	if m.CapabilityCatalogueCursor > len(m.CapabilityCatalogue) {
+	if m.CapabilityCatalogueCursor > m.LenCapabilities {
 		m.CapabilityCatalogueCursor = 0
 	}
 	return m, nil
+}
+
+func checkOrUnheck(m *Model) {
+	count := 0
+	for _, provider := range m.ProviderCatalogue {
+		for _, capability := range provider.capabilities {
+			if count == m.CapabilityCatalogueCursor {
+				capability.selected = !capability.selected
+				return
+			}
+			count++
+		}
+	}
 }
 
 // TODO: Make path give help on how to navigate, i.e., ctrl + space yields cwd and picker
@@ -267,16 +341,20 @@ func capabilitiesView(m Model) string {
 	tpl := "Select capabilities \n\n"
 	tpl += "%s\n\n%s\n\n"
 	var choices string
-	for index, capability := range m.CapabilityCatalogue {
-		cursor := " "
-		if index == m.CapabilityCatalogueCursor {
-			cursor = ">"
+	capabilityCursor := 0
+	for _, provider := range m.ProviderCatalogue {
+		choices += fmt.Sprintf("%s \n", keywordStyle.Render(provider.name))
+		for _, capability := range provider.capabilities {
+			cursor := " "
+			if capabilityCursor == m.CapabilityCatalogueCursor {
+				cursor = ">"
+			}
+			choices += fmt.Sprintf("%s %s\n", cursor, checkbox(capability.name, capability.selected))
+			capabilityCursor++
 		}
-		_, ok := m.SelectedCapabilities[index]
-		choices += fmt.Sprintf("%s %s\n", cursor, checkbox(capability, ok))
 	}
 	button := &blurredGenerateButton
-	if m.CapabilityCatalogueCursor == len(m.CapabilityCatalogue) {
+	if m.CapabilityCatalogueCursor == m.LenCapabilities {
 		button = &focusedGenerateButton
 	}
 	return fmt.Sprintf(tpl, choices, *button)

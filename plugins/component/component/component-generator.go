@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"text/template"
 
 	"github.com/Mattilsynet/map-cli/plugins/component/project"
 )
 
-func GenerateApp(config Config) error {
-	mapOfContent, err := ReadAllTemplateFiles(config, project.Templs)
+func GenerateApp(config *Config) error {
+	setBools(config)
+	mapOfContent, err := ReadAllTemplateFiles(*config, project.Templs)
 	if err != nil {
 		return err
 	}
@@ -22,6 +24,21 @@ func GenerateApp(config Config) error {
 	}
 
 	return nil
+}
+
+func setBools(config *Config) {
+	// TODO: Really unfortunate logic to have to know what the above layer does, i.e., free text strings conveyed from tui, should be structured in a middle mapper
+	config.ImportNatsCoreWit = slices.Contains(config.Capabilities, "nats-core:publish")
+	config.ExportNatsCoreWit = slices.Contains(config.Capabilities, "nats-core:subscription")
+	config.ExportNatsCoreRequestReplyWit = slices.Contains(config.Capabilities, "nats-core-wit")
+	config.ImportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:publish")
+	config.ExportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:consumer")
+	config.ImportNatsKvWit = slices.Contains(config.Capabilities, "nats-kv:key-value")
+	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
+
+	config.ComponentNatsCore = config.ImportNatsCoreWit || config.ExportNatsCoreWit
+	config.ComponentNatsJetstream = config.ImportNatsJetstreamWit || config.ExportNatsJetstreamWit
+	config.ComponentNatsKeyValue = config.ImportNatsKvWit
 }
 
 func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error {
