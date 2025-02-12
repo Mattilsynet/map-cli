@@ -54,6 +54,9 @@ func main() {
 				fmt.Println("error starting program:", err)
 				os.Exit(1)
 			}
+			if model := m.(Model); model.Quitting {
+				os.Exit(1)
+			}
 			model := m.(*Model)
 			component.GenerateApp(model.Config)
 		},
