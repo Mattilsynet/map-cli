@@ -13,6 +13,8 @@ import (
 
 func GenerateApp(config *Config) error {
 	setBools(config)
+	config.WitComponentName = toKebabCase(config.ComponentName)
+	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
 	mapOfContent, err := ReadAllTemplateFiles(*config, project.Templs)
 	if err != nil {
 		return err
@@ -22,7 +24,7 @@ func GenerateApp(config *Config) error {
 		log.Println(err)
 		return err
 	}
-
+	log.Println("Done generating app look at README.md in: ", config.Path)
 	return nil
 }
 
@@ -34,7 +36,6 @@ func setBools(config *Config) {
 	config.ImportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:publish")
 	config.ExportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:consumer")
 	config.ImportNatsKvWit = slices.Contains(config.Capabilities, "nats-kv:key-value")
-	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
 
 	config.ComponentNatsCore = config.ImportNatsCoreWit || config.ExportNatsCoreWit
 	config.ComponentNatsJetstream = config.ImportNatsJetstreamWit || config.ExportNatsJetstreamWit

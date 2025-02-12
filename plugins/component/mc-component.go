@@ -230,7 +230,8 @@ func updateCapabilityCatalogue(msg tea.Msg, m *Model) (tea.Model, tea.Cmd) {
 			if m.CapabilityCatalogueCursor == m.LenCapabilities {
 				config := &component.Config{}
 				config.ComponentName = m.Inputs[0].Value()
-				config.Path = m.Inputs[1].Value()
+				config.Repository = m.Inputs[1].Value()
+				config.Path = m.Inputs[2].Value()
 				for _, provider := range m.ProviderCatalogue {
 					for _, capability := range provider.capabilities {
 						if capability.selected {

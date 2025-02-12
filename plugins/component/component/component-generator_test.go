@@ -13,7 +13,7 @@ func TestGenerateComponent(t *testing.T) {
 		"/home/solve/git/temp/testComponent",
 		"testComponent",
 		"github.com/Mattilsynet/test-component",
-		[]string{"nats-core", "nats-jetstream", "nats-kv"},
+		[]string{"nats-core:publish", "nats-jetstream:publish", "nats-kv:key-value"},
 		WithComponentCode(),
 		WithWitPackage())
 	config.ExportNatsCoreWit = true
@@ -22,7 +22,7 @@ func TestGenerateComponent(t *testing.T) {
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsJetstreamWit = true
 
-	err := GenerateApp(config)
+	err := GenerateApp(&config)
 
 	log.Println(err)
 }
