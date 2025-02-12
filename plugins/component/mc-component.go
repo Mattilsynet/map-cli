@@ -54,11 +54,9 @@ func main() {
 				fmt.Println("error starting program:", err)
 				os.Exit(1)
 			}
-			if model := m.(Model); model.Quitting {
-				os.Exit(1)
+			if model := m.(*Model); model.Finished {
+				component.GenerateApp(model.Config)
 			}
-			model := m.(*Model)
-			component.GenerateApp(model.Config)
 		},
 	}
 	rootCmd.AddCommand(generate)
@@ -161,7 +159,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		k := msg.String()
 		if k == "q" || k == "ctrl+c" {
 			m.Quitting = true
-			return m, tea.Quit
+			return &m, tea.Quit
 		}
 	}
 	if m.NameAndPathEntered {
