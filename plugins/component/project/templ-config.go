@@ -38,17 +38,21 @@ var pkgNatsJsTempl string
 //go:embed deps.toml.templ
 var depsTomlTempl string
 
+//go:embed github.workflows.yml.templ
+var githubWorkflowsYmlTempl string
+
 var Templs = map[string]string{
-	"go.mod":           goModtempl,
-	"component.go":     componentGotempl,
-	"wadm.yaml":        wadmYamltempl,
-	"local.wadm.yaml":  localWadmYamltempl,
-	"tools.go":         toolsGotempl,
-	"wasmcloud.toml":   wasmcloudTomltempl,
-	"README.md":        readmeMdtempl,
-	"wit/world.wit":    worldWittempl,
-	"pkg/nats/nats.go": pkgNatsGoTempl,
-	"pkg/nats/kv.go":   pkgNatsKvTempl,
-	"pkg/nats/js.go":   pkgNatsJsTempl,
-	"wit/deps.toml":    depsTomlTempl,
+	"go.mod":                           goModtempl,
+	"component.go":                     componentGotempl,
+	"wadm.yaml":                        wadmYamltempl,
+	"local.wadm.yaml":                  localWadmYamltempl,
+	"tools.go":                         toolsGotempl,
+	"wasmcloud.toml":                   wasmcloudTomltempl,
+	"README.md":                        readmeMdtempl,
+	"wit/world.wit":                    worldWittempl,
+	"pkg/nats/nats.go":                 pkgNatsGoTempl,
+	"pkg/nats/kv.go":                   pkgNatsKvTempl,
+	"pkg/nats/js.go":                   pkgNatsJsTempl,
+	"wit/deps.toml":                    depsTomlTempl,
+	".github/workflows/build_push.yml": githubWorkflowsYmlTempl,
 }

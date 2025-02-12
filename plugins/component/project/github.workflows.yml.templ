@@ -1,0 +1,93 @@
+name: build_push
+on:
+ push:
+    tags:
+      - 'v*'
+
+jobs:
+  wash-build:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+      test-deploy: local.wadm.yaml
+      wasm-bin: {{.ComponentName}}_s.wasm
+    permissions:
+      contents: 'write'
+      packages: 'write'
+    steps:
+      #INFO: setup environment
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: install go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.0'
+      - name: install tinygo
+        uses: acifani/setup-tinygo@v2
+        with:
+          tinygo-version: "0.33.0"
+          install-binaryen: "false"
+      - name: install wash tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wit-bindgen-cli, wasm-tools, wit-deps-cli, wash-cli
+      - name: download wasm-tools-go
+        shell: bash
+        run: |
+          go mod download github.com/bytecodealliance/wasm-tools-go
+          go get go.bytecodealliance.org/cmd/wit-bindgen-go
+      #INFO: generate files
+      - name: wit-deps
+        shell: bash
+        run: |
+          wit-deps
+      - name: generate go files
+        shell: bash
+        run: |
+           go generate ./...
+      - name: go mod tidy
+        shell: bash
+        run: |
+           go mod tidy
+      #INFO: Validate component yamls
+      - name: validate-yaml
+        shell: bash
+        run: |
+          [[ ! -f wadm.yaml ]] || wash app validate wadm.yaml
+          [[ ! -f local.wadm.yaml ]] || wash app validate local.wadm.yaml
+      - name: wash build
+        shell: bash
+        run: |
+          wash build
+        #INFO: wash test application isolated 
+      - name: test component load
+        shell: bash
+        run: |
+          set -xe
+          wash up &
+          WASH_PID=$!
+          sleep 10;
+          wash app deploy ${{ "{{ env.test-deploy }}" }};
+          TRIES=0
+          while [[ $(wash get inventory --output=json | jq '.inventories[0].components | length') -eq 0 ]] ; do
+            if [[ $TRIES -gt 10 ]]; then
+              echo "❌ failed to find component in inventory output after deploying example manifest";
+              exit -1;
+            fi
+            TRIES=$((TRIES+1));
+            sleep 1;
+          done;
+          echo "✅ successfully started at least one component";
+          wash app delete ${{ "{{ env.test-deploy }}"}};
+          kill $WASH_PID;
+          exit 0;
+      #INFO: publish package to ghcr
+      - name: publish package to github repository
+        env:
+          WASH_REG_USER: ${{ "{{ github.repository_owner }}" }}
+          WASH_REG_PASSWORD: ${{ "{{ secrets.GITHUB_TOKEN }}" }}
+        shell: bash
+        run: |
+           wash push ghcr.io/${{ "{{ github.repository }}" }}:${{ "{{ github.ref_name }}" }} ${{ "{{ env.wasm-bin }}" }} --annotation org.opencontainers.image.source=${{ "{{github.server_url"}} }}/${{ "{{ github.repository }}" }}
+        working-directory: build
+ 
