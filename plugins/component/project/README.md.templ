@@ -17,7 +17,7 @@ A solution is to install `cargo` and `cargo-binstall`, and then `cargo binstall 
 ## First build
 1. `wit-deps`  
 2. `mkdir gen`  
-3. `wit-bindgen-go generate --world {{ .ComponentName }} --out gen ./wit`  
+3. `wit-bindgen-go generate --world {{ .WitComponentName }} --out gen ./wit`  
 4. `go mod tidy`  
 5. wash build
 
