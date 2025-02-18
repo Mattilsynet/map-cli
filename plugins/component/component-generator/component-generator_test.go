@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Mattilsynet/map-cli/plugins/component/project"
+	"github.com/Mattilsynet/map-cli/plugins/component/component-template"
 )
 
 func TestGenerateComponent(t *testing.T) {
@@ -15,7 +15,7 @@ func TestGenerateComponent(t *testing.T) {
 		"github.com/Mattilsynet/test-component",
 		[]string{"nats-core:publish", "nats-jetstream:publish", "nats-kv:key-value"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ExportNatsCoreWit = true
 	config.ExportNatsCoreRequestReplyWit = true
 	config.ImportNatsKvWit = true
@@ -90,7 +90,7 @@ func main() {}
 		"github.com/Mattilsynet/test-component",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ExportNatsJetstreamWit = true
 	config.ExportNatsCoreWit = true
 	config.ExportNatsCoreRequestReplyWit = true
@@ -130,7 +130,7 @@ world test-component{
 		"github.com/Mattilsynet/map-test",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ImportNatsCoreWit = true
 	config.ExportNatsCoreWit = true
 	config.ImportNatsJetstreamWit = true
@@ -258,7 +258,7 @@ func (conn *Conn) RegisterSubscription(fn func(*Msg)) {
 		"github.com/Mattilsynet/map-test",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ImportNatsCoreWit = true
 	config.ExportNatsCoreWit = true
 	config.ImportNatsJetstreamWit = true
@@ -317,7 +317,7 @@ func toWitNatsHeaders(header map[string][]string) cm.List[jetstream_types.KeyVal
 		"github.com/Mattilsynet/map-test",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ImportNatsCoreWit = true
 	config.ExportNatsCoreWit = true
 	config.ImportNatsJetstreamWit = true
@@ -447,7 +447,7 @@ func (js *KeyValue) ListKeys() ([]string, error) {
 		"github.com/Mattilsynet/map-test",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ImportNatsCoreWit = true
 	config.ExportNatsCoreWit = true
 	config.ImportNatsJetstreamWit = true
@@ -548,7 +548,7 @@ spec:
 		"github.com/Mattilsynet/map-test",
 		[]string{"nats-core", "nats-jetstream", "nats-kv"},
 		WithComponentCode(),
-		WithWitPackage())
+		WithWit())
 	config.ImportNatsCoreWit = true
 	config.ExportNatsCoreWit = true
 	config.ImportNatsJetstreamWit = true

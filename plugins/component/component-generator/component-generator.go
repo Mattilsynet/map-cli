@@ -6,9 +6,10 @@ import (
 	"log"
 	"os"
 	"slices"
+	"sync"
 	"text/template"
 
-	"github.com/Mattilsynet/map-cli/plugins/component/project"
+	project "github.com/Mattilsynet/map-cli/plugins/component/component-template"
 )
 
 func GenerateApp(config *Config) error {
@@ -43,6 +44,12 @@ func setBools(config *Config) {
 }
 
 func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error {
+	mtx := sync.WaitGroup{}
+	mtx.Add(1)
+	go func() {
+		LoadBarStart()
+		mtx.Done()
+	}()
 	for path, content := range mapOfContent {
 		// INFO: Only make files if content from templating is not empty
 		if content != "" && content != "\n" {
@@ -56,6 +63,7 @@ func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error
 			}
 		}
 	}
+	mtx.Wait()
 	return nil
 }
 

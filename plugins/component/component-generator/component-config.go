@@ -43,11 +43,10 @@ func WithComponentCode() Opt {
 		config.ComponentNatsCore = slices.Contains(config.Capabilities, "nats-core")
 		config.ComponentNatsJetstream = slices.Contains(config.Capabilities, "nats-jetstream")
 		config.ComponentNatsKeyValue = slices.Contains(config.Capabilities, "nats-kv")
-		// TODO: add wit deduction or add it as an option
 	}
 }
 
-func WithWitPackage() Opt {
+func WithWit() Opt {
 	return func(config *Config) {
 		config.WitComponentName = toKebabCase(config.ComponentName)
 		config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
