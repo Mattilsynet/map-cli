@@ -6,28 +6,43 @@ import (
 	"log"
 	"os"
 	"slices"
-	"sync"
 	"text/template"
 
 	project "github.com/Mattilsynet/map-cli/plugins/component/component-template"
 )
 
-func GenerateApp(config *Config) error {
+type PathContent struct {
+	Path, Content string
+}
+
+func GetPathContentList(config *Config) (error, []PathContent) {
 	setBools(config)
 	config.WitComponentName = toKebabCase(config.ComponentName)
 	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
-	mapOfContent, err := ReadAllTemplateFiles(*config, project.Templs)
+	pathContent, err := ReadAllTemplateFiles(*config, project.Templs)
 	if err != nil {
-		return err
+		return err, nil
 	}
-	err = GenerateFiles(config.Path, mapOfContent)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	log.Println("Done generating app look at README.md in: ", config.Path)
-	return nil
+
+	return nil, pathContent
 }
+
+// func GenerateApp(config *Config) error {
+// 	setBools(config)
+// 	config.WitComponentName = toKebabCase(config.ComponentName)
+// 	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
+// 	mapOfContent, err := ReadAllTemplateFiles(*config, project.Templs)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = GenerateFiles(config.Path, mapOfContent)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return err
+// 	}
+// 	log.Println("Done generating app look at README.md in: ", config.Path)
+// 	return nil
+// }
 
 func setBools(config *Config) {
 	// TODO: Really unfortunate logic to have to know what the above layer does, i.e., free text strings conveyed from tui, should be structured in a middle mapper
@@ -43,15 +58,21 @@ func setBools(config *Config) {
 	config.ComponentNatsKeyValue = config.ImportNatsKvWit
 }
 
+func GenerateAndInstall(projectRootPath, path, content string) error {
+	if content != "" && content != "\n" {
+		fullPath := projectRootPath + "/" + path
+		if err := os.MkdirAll(getDirFromPath(fullPath), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+			return fmt.Errorf("failed to write file %s: %v", fullPath, err)
+		}
+	}
+	return nil
+}
+
 func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error {
-	mtx := sync.WaitGroup{}
-	mtx.Add(1)
-	go func() {
-		LoadBarStart()
-		mtx.Done()
-	}()
 	for path, content := range mapOfContent {
-		// INFO: Only make files if content from templating is not empty
 		if content != "" && content != "\n" {
 			fullPath := projectRootPath + "/" + path
 			if err := os.MkdirAll(getDirFromPath(fullPath), 0o755); err != nil {
@@ -63,7 +84,6 @@ func GenerateFiles(projectRootPath string, mapOfContent map[string]string) error
 			}
 		}
 	}
-	mtx.Wait()
 	return nil
 }
 
@@ -80,17 +100,17 @@ func getDirFromPath(filePath string) string {
 	return filePath[:lastSlash]
 }
 
-func ReadAllTemplateFiles(config Config, tmpls map[string]string) (map[string]string, error) {
-	mapOfContent := make(map[string]string)
+func ReadAllTemplateFiles(config Config, tmpls map[string]string) ([]PathContent, error) {
+	pathContentList := make([]PathContent, 0)
 	for key, tmpl := range tmpls {
 		txtFile, err := ExecuteTmplWithData(config, tmpl)
 		if err != nil {
 			log.Println("error reading file: ", key, " with error: ", err)
 			return nil, err
 		}
-		mapOfContent[key] = txtFile
+		pathContentList = append(pathContentList, PathContent{Path: key, Content: txtFile})
 	}
-	return mapOfContent, nil
+	return pathContentList, nil
 }
 
 func ExecuteTmplWithData(data interface{}, tmplContent string) (string, error) {

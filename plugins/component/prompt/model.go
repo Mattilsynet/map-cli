@@ -1,4 +1,4 @@
-package teaModel
+package prompt
 
 import (
 	"fmt"
@@ -23,10 +23,12 @@ var (
 )
 
 type Model struct {
-	quitting    bool
-	Finished    bool
-	firstSheet  *firstsheet.Form
-	secondSheet *secondsheet.Form
+	quitting         bool
+	Finished         bool
+	firstSheet       *firstsheet.Form
+	secondSheet      *secondsheet.Form
+	componentContent string
+	wadmContent      string
 }
 
 func New() *Model {

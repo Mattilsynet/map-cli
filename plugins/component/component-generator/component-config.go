@@ -1,7 +1,6 @@
 package component
 
 import (
-	"log"
 	"slices"
 	"strings"
 )
@@ -54,7 +53,6 @@ func WithWit() Opt {
 }
 
 func deductWitPackage(repository string) string {
-	log.Println(repository)
 	paths := strings.Split(repository, "/")
 	return strings.ToLower(paths[1])
 }

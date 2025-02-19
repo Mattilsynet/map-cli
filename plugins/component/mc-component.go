@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
-	"github.com/Mattilsynet/map-cli/plugins/component/tea-model"
+	"github.com/Mattilsynet/map-cli/plugins/component/prompt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
@@ -21,18 +21,27 @@ func main() {
 		Short:   "Generate a WasmCloud component",
 		Aliases: []string{"gen", "g"},
 		Run: func(cmd *cobra.Command, args []string) {
-			m, err := tea.NewProgram(teaModel.New()).Run()
+			m, err := tea.NewProgram(prompt.New()).Run()
 			if err != nil {
-				fmt.Println("error starting program:", err)
+				fmt.Println("error starting prompt program:", err)
 				os.Exit(1)
 			}
-			if model := m.(*teaModel.Model); model.Finished {
-				component.GenerateApp(model.ResultConfig())
-				/*  TODO:
-				Feature: Add fancy loading bar
-				Feature: Add fancy display of files generated in which folder
-				Feature: cd to the newly creatid path
-				*/
+			if model := m.(*prompt.Model); model.Finished {
+				generateModel, err := component.NewModel(model.ResultConfig())
+				if err != nil {
+					fmt.Println("error intiation, file-generation:", err)
+				}
+				teaModel, err := tea.NewProgram(generateModel).Run()
+				if err != nil {
+					fmt.Println("error starting code generation program:", err)
+				}
+				if model := teaModel.(component.Model); model.Done {
+					fmt.Print("\n")
+					fmt.Println("Goto the newly created component and follow README.md for further assistance")
+					fmt.Print("\n")
+					fmt.Println("cd " + model.RootPath)
+				}
+
 			}
 		},
 	}

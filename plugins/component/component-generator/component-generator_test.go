@@ -8,25 +8,6 @@ import (
 	"github.com/Mattilsynet/map-cli/plugins/component/component-template"
 )
 
-func TestGenerateComponent(t *testing.T) {
-	config := NewConfig(
-		"/home/solve/git/temp/testComponent",
-		"testComponent",
-		"github.com/Mattilsynet/test-component",
-		[]string{"nats-core:publish", "nats-jetstream:publish", "nats-kv:key-value"},
-		WithComponentCode(),
-		WithWit())
-	config.ExportNatsCoreWit = true
-	config.ExportNatsCoreRequestReplyWit = true
-	config.ImportNatsKvWit = true
-	config.ExportNatsJetstreamWit = true
-	config.ImportNatsJetstreamWit = true
-
-	err := GenerateApp(&config)
-
-	log.Println(err)
-}
-
 func TestComponentGeneration(t *testing.T) {
 	expected := `
 	//go:generate go run github.com/bytecodealliance/wasm-tools-go/cmd/wit-bindgen-go generate -world test-component -out gen ./wit
