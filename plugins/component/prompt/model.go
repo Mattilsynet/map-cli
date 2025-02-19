@@ -43,7 +43,7 @@ func (m Model) ResultConfig() *component.Config {
 	config.ComponentName = m.firstSheet.Inputs[0].Value()
 	config.Repository = m.firstSheet.Inputs[1].Value()
 	config.Path = m.firstSheet.Inputs[2].Value()
-	for _, provider := range m.secondSheet.SecondSheetCatalogue {
+	for _, provider := range m.secondSheet.Catalogue {
 		for _, capability := range provider.Capabilities {
 			if capability.Selected {
 				// INFO: We append provider prefix such that the permutation is unique, think nats-core:publish vs nats-jetstream:publish
@@ -91,7 +91,7 @@ func (model Model) View() string {
 	}
 	var enterSelect string
 	if model.firstSheet.Done {
-		enterSelect = "⏎ / _ : Select"
+		enterSelect = "⏎ / _ : Select • tab : focus next"
 		s = model.secondSheet.View()
 	} else {
 		enterSelect = "⏎ : Select"

@@ -28,10 +28,10 @@ const (
 )
 
 type Form struct {
-	cursor               int
-	SecondSheetCatalogue []Provider
-	lenCatalogue         int
-	Done                 bool
+	cursor       int
+	Catalogue    []Provider
+	lenCatalogue int
+	Done         bool
 }
 
 type Provider struct {
@@ -45,7 +45,7 @@ type Capability struct {
 
 func New() *Form {
 	form := Form{}
-	form.SecondSheetCatalogue = []Provider{
+	form.Catalogue = []Provider{
 		{
 			natsCore,
 			[]*Capability{{"publish", !selected}, {"subscription", !selected}, {"request/reply", !selected}},
@@ -59,7 +59,7 @@ func New() *Form {
 			[]*Capability{{"key-value", !selected}},
 		},
 	}
-	form.lenCatalogue = countCapabilities(form.SecondSheetCatalogue)
+	form.lenCatalogue = countCapabilities(form.Catalogue)
 	return &form
 }
 
@@ -68,7 +68,7 @@ func (form *Form) View() string {
 	tpl += "%s\n\n%s\n\n"
 	var choices string
 	capabilityCursor := 0
-	for _, provider := range form.SecondSheetCatalogue {
+	for _, provider := range form.Catalogue {
 		choices += fmt.Sprintf("%s \n", keywordStyle.Render(string(provider.Name)))
 		for _, capability := range provider.Capabilities {
 			cursor := " "
@@ -104,7 +104,6 @@ func checkboxTemplate(label string, checked bool) string {
 }
 
 func (form *Form) Update(msg tea.Msg) tea.Cmd {
-	print("hey")
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -132,7 +131,7 @@ func (form *Form) Update(msg tea.Msg) tea.Cmd {
 
 func (form *Form) checkOrUnheckCapability() {
 	count := 0
-	for _, provider := range form.SecondSheetCatalogue {
+	for _, provider := range form.Catalogue {
 		for _, capability := range provider.Capabilities {
 			if count == form.cursor {
 				capability.Selected = !capability.Selected
