@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
-	"github.com/Mattilsynet/map-cli/plugins/component/prompt"
+	"github.com/Mattilsynet/map-cli/plugins/component/tui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )

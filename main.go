@@ -54,6 +54,18 @@ func main() {
 			}
 		},
 	})
+	rootCmd.AddCommand(&cobra.Command{
+		Use:     "component",
+		Short:   "Component plugin",
+		Aliases: []string{"c"},
+		Run: func(cmd *cobra.Command, args []string) {
+			err := execPlugin("mc-component", args...)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to execute plugin: %v\n", err)
+				os.Exit(1)
+			}
+		},
+	})
 
 	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
 
