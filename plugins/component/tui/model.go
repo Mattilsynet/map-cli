@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
+	project "github.com/Mattilsynet/map-cli/plugins/component/component-template"
+	display_example "github.com/Mattilsynet/map-cli/plugins/component/display-example"
 	firstsheet "github.com/Mattilsynet/map-cli/plugins/component/first-sheet"
 	secondsheet "github.com/Mattilsynet/map-cli/plugins/component/second-sheet"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -22,33 +24,43 @@ var (
 	dotStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
 	mainStyle   = lipgloss.NewStyle().MarginLeft(2)
 	modelStyle  = lipgloss.NewStyle().
-			Width(25).
-			Height(5).
+			Width(45).
+			Height(45).
 			Align(lipgloss.Left, lipgloss.Left).
 			BorderStyle(lipgloss.HiddenBorder())
 	focusedModelStyle = lipgloss.NewStyle().
-				Width(25).
-				Height(5).
+				Width(45).
+				Height(45).
 				Align(lipgloss.Left, lipgloss.Left).
 				BorderStyle(lipgloss.NormalBorder()).
 				BorderForeground(lipgloss.Color("69"))
 )
 
 type Model struct {
-	quitting         bool
-	Finished         bool
-	firstSheet       *firstsheet.Form
-	secondSheet      *secondsheet.Form
-	componentContent string
-	wadmContent      string
-	swapTab          bool
+	quitting       bool
+	Finished       bool
+	firstSheet     *firstsheet.Form
+	secondSheet    *secondsheet.Form
+	wadmModel      display_example.Model
+	componentModel display_example.Model
+	swapTab        bool
 }
 
-func New() *Model {
+func New() (*Model, error) {
+	wadmModel, err := display_example.New(project.LocalWadmYamlPath)
+	if err != nil {
+		return nil, err
+	}
+	componentModel, err := display_example.New(project.ComponentGoPath)
+	if err != nil {
+		return nil, err
+	}
 	m := Model{}
 	m.firstSheet = firstsheet.New()
 	m.secondSheet = secondsheet.New()
-	return &m
+	m.wadmModel = *wadmModel
+	m.componentModel = *componentModel
+	return &m, nil
 }
 
 func (m Model) ResultConfig() *component.Config {
@@ -72,7 +84,6 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
 		if k == "q" || k == "ctrl+c" {
@@ -86,7 +97,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// if !m.firstSheet.Done {
 	//	return m, m.firstSheet.Update(msg)
 	// } else if !m.secondSheet.Done {
-	return m, m.secondSheet.Update(msg)
+	cmd := m.secondSheet.Update(msg)
+	m.componentModel.Update(m.ResultConfig())
+	m.wadmModel.Update(m.ResultConfig())
+	return m, cmd
 	// } else {
 	// 	if m.firstSheet.Done && m.secondSheet.Done {
 	// 		m.Finished = true
@@ -109,14 +123,19 @@ func (model Model) View() string {
 	// if model.firstSheet.Done {
 	enterSelect = "⏎ / _ : Select • tab : focus next"
 	if model.swapTab {
-		s += lipgloss.JoinHorizontal(lipgloss.Top,
-			focusedModelStyle.Render(fmt.Sprintf("%25s", model.secondSheet.View()),
-				modelStyle.Render(fmt.Sprintf("%25s", "generation stuff"))))
+		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render("yo man bbobo tatjakdsdjaskdjas dksaj dkasj dkasj dksa jdask djask"), modelStyle.Render("hfasfjaijdasidsaj idasj idas jidasj disa jdias jdasi djasi dasji"))
 	} else {
-		s += lipgloss.JoinHorizontal(lipgloss.Top,
-			modelStyle.Render(fmt.Sprintf("%25s", model.secondSheet.View()),
-				focusedModelStyle.Render(fmt.Sprintf("%25s", "generation stuff"))))
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(fmt.Sprintf("//local.wadm.yaml\n\n%s", model.wadmModel.View())))
 	}
+	// if model.swapTab {
+	// 	s += lipgloss.JoinVertical(lipgloss.Left,
+	// 		focusedModelStyle.Render(fmt.Sprintf("%s", "wtf wtf"),
+	// 			modelStyle.Render(fmt.Sprintf("%s", "generation stuff"))))
+	// } else {
+	// 	s += lipgloss.JoinVertical(lipgloss.Left,
+	// 		modelStyle.Render(fmt.Sprintf("%25s", "ehmmm"),
+	// 			focusedModelStyle.Render(fmt.Sprintf("%25s", "generation stuff"))))
+	// }
 	// } else {
 	// 	enterSelect = "⏎ : Select"
 	// 	s = model.firstSheet.View()

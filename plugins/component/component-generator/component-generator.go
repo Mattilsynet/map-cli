@@ -15,34 +15,26 @@ type PathContent struct {
 	Path, Content string
 }
 
-func GetPathContentList(config *Config) (error, []PathContent) {
+func GetTemplate(path string) (string, error) {
+	for key, tmpl := range project.Templs {
+		if key == path {
+			return tmpl, nil
+		}
+	}
+	return "", fmt.Errorf("template not found for path: %s", path)
+}
+
+func GetPathContentList(config *Config) ([]PathContent, error) {
 	setBools(config)
 	config.WitComponentName = toKebabCase(config.ComponentName)
 	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
-	pathContent, err := ReadAllTemplateFiles(*config, project.Templs)
+	pathContent, err := ReadAllTemplateFiles(config, project.Templs)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, pathContent
+	return pathContent, nil
 }
-
-// func GenerateApp(config *Config) error {
-// 	setBools(config)
-// 	config.WitComponentName = toKebabCase(config.ComponentName)
-// 	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
-// 	mapOfContent, err := ReadAllTemplateFiles(*config, project.Templs)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = GenerateFiles(config.Path, mapOfContent)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return err
-// 	}
-// 	log.Println("Done generating app look at README.md in: ", config.Path)
-// 	return nil
-// }
 
 func setBools(config *Config) {
 	// TODO: Really unfortunate logic to have to know what the above layer does, i.e., free text strings conveyed from tui, should be structured in a middle mapper
@@ -100,7 +92,15 @@ func getDirFromPath(filePath string) string {
 	return filePath[:lastSlash]
 }
 
-func ReadAllTemplateFiles(config Config, tmpls map[string]string) ([]PathContent, error) {
+func ReadTemplateFile(config *Config, tmpl string) (string, error) {
+	content, err := ExecuteTmplWithData(config, tmpl)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+}
+
+func ReadAllTemplateFiles(config *Config, tmpls map[string]string) ([]PathContent, error) {
 	pathContentList := make([]PathContent, 0)
 	for key, tmpl := range tmpls {
 		txtFile, err := ExecuteTmplWithData(config, tmpl)
@@ -113,13 +113,17 @@ func ReadAllTemplateFiles(config Config, tmpls map[string]string) ([]PathContent
 	return pathContentList, nil
 }
 
-func ExecuteTmplWithData(data interface{}, tmplContent string) (string, error) {
+func ExecuteTmplWithData(config *Config, tmplContent string) (string, error) {
+	setBools(config)
+	config.WitComponentName = toKebabCase(config.ComponentName)
+	config.WitPackage = deductWitPackage(config.Repository) + ":" + config.WitComponentName
+
 	tmpl, err := template.New("module").Parse(tmplContent)
 	if err != nil {
 		return "", err
 	}
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
+	if err := tmpl.Execute(&buf, config); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

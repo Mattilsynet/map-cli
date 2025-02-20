@@ -38,7 +38,7 @@ func NewModel(config *Config) (*Model, error) {
 	)
 	s := spinner.New()
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
-	err, pathContentList := GetPathContentList(config)
+	pathContentList, err := GetPathContentList(config)
 	if err != nil {
 		return nil, err
 	}

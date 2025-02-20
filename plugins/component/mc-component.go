@@ -21,7 +21,11 @@ func main() {
 		Short:   "Generate a WasmCloud component",
 		Aliases: []string{"gen", "g"},
 		Run: func(cmd *cobra.Command, args []string) {
-			m, err := tea.NewProgram(prompt.New()).Run()
+			promptModel, err := prompt.New()
+			if err != nil {
+				return
+			}
+			m, err := tea.NewProgram(promptModel).Run()
 			if err != nil {
 				fmt.Println("error starting prompt program:", err)
 				os.Exit(1)

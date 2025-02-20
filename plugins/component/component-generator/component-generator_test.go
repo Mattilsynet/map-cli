@@ -75,7 +75,7 @@ func main() {}
 	config.ExportNatsJetstreamWit = true
 	config.ExportNatsCoreWit = true
 	config.ExportNatsCoreRequestReplyWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["component.go"])
+	a, err := ExecuteTmplWithData(&config, tmpls["component.go"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()
@@ -117,7 +117,7 @@ world test-component{
 	config.ImportNatsJetstreamWit = true
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsKvWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["wit/world.wit"])
+	a, err := ExecuteTmplWithData(&config, tmpls["wit/world.wit"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()
@@ -245,7 +245,7 @@ func (conn *Conn) RegisterSubscription(fn func(*Msg)) {
 	config.ImportNatsJetstreamWit = true
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsKvWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["pkg/nats/nats.go"])
+	a, err := ExecuteTmplWithData(&config, tmpls["pkg/nats/nats.go"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()
@@ -304,7 +304,7 @@ func toWitNatsHeaders(header map[string][]string) cm.List[jetstream_types.KeyVal
 	config.ImportNatsJetstreamWit = true
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsKvWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["pkg/nats/js.go"])
+	a, err := ExecuteTmplWithData(&config, tmpls["pkg/nats/js.go"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()
@@ -434,7 +434,7 @@ func (js *KeyValue) ListKeys() ([]string, error) {
 	config.ImportNatsJetstreamWit = true
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsKvWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["pkg/nats/kv.go"])
+	a, err := ExecuteTmplWithData(&config, tmpls["pkg/nats/kv.go"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()
@@ -535,7 +535,7 @@ spec:
 	config.ImportNatsJetstreamWit = true
 	config.ExportNatsJetstreamWit = true
 	config.ImportNatsKvWit = true
-	a, err := ExecuteTmplWithData(config, tmpls["local.wadm.yaml"])
+	a, err := ExecuteTmplWithData(&config, tmpls["local.wadm.yaml"])
 	if err != nil {
 		log.Println("err: ", err)
 		t.Fail()

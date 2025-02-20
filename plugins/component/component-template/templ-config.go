@@ -41,11 +41,16 @@ var depsTomlTempl string
 //go:embed github.workflows.yml.templ
 var githubWorkflowsYmlTempl string
 
+const (
+	ComponentGoPath   = "component.go"
+	LocalWadmYamlPath = "local.wadm.yaml"
+)
+
 var Templs = map[string]string{
 	"go.mod":                           goModtempl,
-	"component.go":                     componentGotempl,
+	ComponentGoPath:                    componentGotempl,
 	"wadm.yaml":                        wadmYamltempl,
-	"local.wadm.yaml":                  localWadmYamltempl,
+	LocalWadmYamlPath:                  localWadmYamltempl,
 	"tools.go":                         toolsGotempl,
 	"wasmcloud.toml":                   wasmcloudTomltempl,
 	"README.md":                        readmeMdtempl,
