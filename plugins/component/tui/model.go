@@ -44,11 +44,11 @@ type Model struct {
 }
 
 func New() (*Model, error) {
-	wadmModel, err := display_example.New(project.LocalWadmYamlPath, width, height)
+	wadmModel, err := display_example.New(project.LocalWadmYamlPath, "yaml", width, height)
 	if err != nil {
 		return nil, err
 	}
-	componentModel, err := display_example.New(project.ComponentGoPath, width, height)
+	componentModel, err := display_example.New(project.ComponentGoPath, "go", width, height)
 	if err != nil {
 		return nil, err
 	}
@@ -93,17 +93,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return &m, tea.Quit
 		}
-		if k == "tab" || k == "right" {
+		if k == "tab" {
 			m.tabIndex++
-			if m.tabIndex == 3 {
+			if m.tabIndex == 4 {
 				m.tabIndex = 1
 			}
 
 		}
-		if k == "left" || k == "shift+tab" {
+		if k == "shift+tab" {
 			m.tabIndex--
 			if m.tabIndex == 0 {
-				m.tabIndex = 2
+				m.tabIndex = 3
 			}
 		}
 		switch m.tabIndex {
@@ -111,6 +111,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.frameSelected = m.secondSheet
 		case 2:
 			m.frameSelected = m.WadmModel
+		case 3:
+			m.frameSelected = m.componentModel
 		}
 	}
 	// if !m.firstSheet.Done {
@@ -142,11 +144,14 @@ func (model Model) View() string {
 	var enterSelect string
 	// if model.firstSheet.Done {
 	enterSelect = "⏎ / _ : Select • tab : focus next"
-	if model.tabIndex == 1 {
-		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()))
-	} else {
-		s += model.WadmModel.View()
-		/* s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View())) */
+	switch model.tabIndex {
+	case 1:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+	case 2:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+	case 3:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
+
 	}
 	// if model.swapTab {
 	// 	s += lipgloss.JoinVertical(lipgloss.Left,

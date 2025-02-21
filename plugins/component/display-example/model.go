@@ -8,22 +8,26 @@ import (
 	"github.com/alecthomas/chroma/quick"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type (
 	ConfigChange component.Config
 	Model        struct {
-		renderer                *glamour.TermRenderer
 		tmpl                    string
 		viewport                viewport.Model
 		renderedTemplateContent string
 		Config                  *component.Config
+		language                string
+		commentStyle            string
 	}
 )
 
-func New(filepath string, vpHeight int, vpWidth int) (*Model, error) {
+func New(filepath string, language string, vpHeight int, vpWidth int) (*Model, error) {
+	commentStyle := "#"
+	if language == "go" {
+		commentStyle = "//"
+	}
 	tmpl, err := component.GetTemplate(filepath)
 	if err != nil {
 		return nil, err
@@ -44,15 +48,11 @@ func New(filepath string, vpHeight int, vpWidth int) (*Model, error) {
 	//  * The gutter glamour applies to the left side of the content
 	//
 	const glamourGutter = 2
-	glamourRenderWidth := vp.Width - vp.Style.GetHorizontalFrameSize() - glamourGutter
-	renderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(glamourRenderWidth),
-	)
 	return &Model{
-		renderer: renderer,
-		tmpl:     tmpl,
-		viewport: vp,
+		tmpl:         tmpl,
+		viewport:     vp,
+		language:     language,
+		commentStyle: commentStyle,
 	}, nil
 }
 
@@ -69,7 +69,7 @@ func (mo *Model) UpdateRenderingContent(config *component.Config) {
 		fmt.Printf("failed to render template: %v", err)
 	}
 	var buffer bytes.Buffer
-	err = quick.Highlight(&buffer, "# wadm.yaml\n"+mo.renderedTemplateContent, "yaml", "terminal256", "monokai")
+	err = quick.Highlight(&buffer, mo.commentStyle+mo.language+"\n"+mo.renderedTemplateContent, mo.language, "terminal256", "monokai")
 	if err != nil {
 		fmt.Printf("failed to highlight code: %v", err)
 	}
