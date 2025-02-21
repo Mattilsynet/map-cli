@@ -43,6 +43,10 @@ type Capability struct {
 	Selected bool
 }
 
+func (form *Form) Init() tea.Cmd {
+	return nil
+}
+
 func New() *Form {
 	form := Form{}
 	form.Catalogue = []Provider{
@@ -103,7 +107,7 @@ func checkboxTemplate(label string, checked bool) string {
 	return fmt.Sprintf("[ ] %s", label)
 }
 
-func (form *Form) Update(msg tea.Msg) tea.Cmd {
+func (form *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -115,7 +119,7 @@ func (form *Form) Update(msg tea.Msg) tea.Cmd {
 			// INFO: we're at generate button and must now wrap up what's selected into a usable config
 			if form.cursor == form.lenCatalogue {
 				form.Done = true
-				return nil
+				return nil, nil
 			}
 			form.checkOrUnheckCapability()
 		}
@@ -126,7 +130,7 @@ func (form *Form) Update(msg tea.Msg) tea.Cmd {
 	if form.cursor > form.lenCatalogue {
 		form.cursor = 0
 	}
-	return nil
+	return nil, nil
 }
 
 func (form *Form) checkOrUnheckCapability() {

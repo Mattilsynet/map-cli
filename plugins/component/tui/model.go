@@ -18,20 +18,16 @@ const (
 )
 
 var (
+	width       = 45
+	height      = 45
 	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	errorStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	dotStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
 	mainStyle   = lipgloss.NewStyle().MarginLeft(2)
 	modelStyle  = lipgloss.NewStyle().
-			Width(45).
-			Height(45).
-			Align(lipgloss.Left, lipgloss.Left).
 			BorderStyle(lipgloss.HiddenBorder())
 	focusedModelStyle = lipgloss.NewStyle().
-				Width(45).
-				Height(45).
-				Align(lipgloss.Left, lipgloss.Left).
 				BorderStyle(lipgloss.NormalBorder()).
 				BorderForeground(lipgloss.Color("69"))
 )
@@ -41,25 +37,28 @@ type Model struct {
 	Finished       bool
 	firstSheet     *firstsheet.Form
 	secondSheet    *secondsheet.Form
-	wadmModel      display_example.Model
-	componentModel display_example.Model
-	swapTab        bool
+	WadmModel      *display_example.Model
+	componentModel *display_example.Model
+	frameSelected  tea.Model
+	tabIndex       int
 }
 
 func New() (*Model, error) {
-	wadmModel, err := display_example.New(project.LocalWadmYamlPath)
+	wadmModel, err := display_example.New(project.LocalWadmYamlPath, width, height)
 	if err != nil {
 		return nil, err
 	}
-	componentModel, err := display_example.New(project.ComponentGoPath)
+	componentModel, err := display_example.New(project.ComponentGoPath, width, height)
 	if err != nil {
 		return nil, err
 	}
 	m := Model{}
 	m.firstSheet = firstsheet.New()
 	m.secondSheet = secondsheet.New()
-	m.wadmModel = *wadmModel
-	m.componentModel = *componentModel
+	m.WadmModel = wadmModel
+	m.componentModel = componentModel
+	m.frameSelected = m.secondSheet
+	m.tabIndex = 1
 	return &m, nil
 }
 
@@ -83,6 +82,10 @@ func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+// 0 = firstSheet
+// 1 = secondSheet
+// 2 = WadmModel
+// 3 = componentModel
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
@@ -90,20 +93,37 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return &m, tea.Quit
 		}
-		if k == "tab" {
-			m.swapTab = !m.swapTab
+		if k == "tab" || k == "right" {
+			m.tabIndex++
+			if m.tabIndex == 3 {
+				m.tabIndex = 1
+			}
+
+		}
+		if k == "left" || k == "shift+tab" {
+			m.tabIndex--
+			if m.tabIndex == 0 {
+				m.tabIndex = 2
+			}
+		}
+		switch m.tabIndex {
+		case 1:
+			m.frameSelected = m.secondSheet
+		case 2:
+			m.frameSelected = m.WadmModel
 		}
 	}
 	// if !m.firstSheet.Done {
 	//	return m, m.firstSheet.Update(msg)
 	// } else if !m.secondSheet.Done {
-	cmd := m.secondSheet.Update(msg)
-	m.componentModel.Update(m.ResultConfig())
-	m.wadmModel.Update(m.ResultConfig())
+	m.componentModel.UpdateRenderingContent(m.ResultConfig())
+	m.WadmModel.UpdateRenderingContent(m.ResultConfig())
+	_, cmd := m.frameSelected.Update(msg)
 	return m, cmd
 	// } else {
 	// 	if m.firstSheet.Done && m.secondSheet.Done {
 	// 		m.Finished = true
+
 	// 		return &m, tea.Quit
 	// 	}
 	// }
@@ -122,10 +142,11 @@ func (model Model) View() string {
 	var enterSelect string
 	// if model.firstSheet.Done {
 	enterSelect = "⏎ / _ : Select • tab : focus next"
-	if model.swapTab {
-		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render("yo man bbobo tatjakdsdjaskdjas dksaj dkasj dkasj dksa jdask djask"), modelStyle.Render("hfasfjaijdasidsaj idasj idas jidasj disa jdias jdasi djasi dasji"))
+	if model.tabIndex == 1 {
+		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()))
 	} else {
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(fmt.Sprintf("//local.wadm.yaml\n\n%s", model.wadmModel.View())))
+		s += model.WadmModel.View()
+		/* s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View())) */
 	}
 	// if model.swapTab {
 	// 	s += lipgloss.JoinVertical(lipgloss.Left,
