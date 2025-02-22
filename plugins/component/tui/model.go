@@ -8,7 +8,6 @@ import (
 	display_example "github.com/Mattilsynet/map-cli/plugins/component/display-example"
 	firstsheet "github.com/Mattilsynet/map-cli/plugins/component/first-sheet"
 	secondsheet "github.com/Mattilsynet/map-cli/plugins/component/second-sheet"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -41,6 +40,10 @@ type Model struct {
 	componentModel *display_example.Model
 	frameSelected  tea.Model
 	tabIndex       int
+}
+
+func (m Model) Init() tea.Cmd {
+	return nil
 }
 
 func New() (*Model, error) {
@@ -78,10 +81,6 @@ func (m Model) ResultConfig() *component.Config {
 	return config
 }
 
-func (m Model) Init() tea.Cmd {
-	return textinput.Blink
-}
-
 // 0 = firstSheet
 // 1 = secondSheet
 // 2 = WadmModel
@@ -96,17 +95,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if k == "tab" {
 			m.tabIndex++
 			if m.tabIndex == 4 {
-				m.tabIndex = 1
+				m.tabIndex = 0
 			}
 
 		}
 		if k == "shift+tab" {
 			m.tabIndex--
-			if m.tabIndex == 0 {
+			if m.tabIndex == -1 {
 				m.tabIndex = 3
 			}
 		}
 		switch m.tabIndex {
+		case 0:
+			m.frameSelected = m.firstSheet
 		case 1:
 			m.frameSelected = m.secondSheet
 		case 2:
@@ -142,16 +143,19 @@ func (model Model) View() string {
 		return "\n Quitting!\n\n"
 	}
 	var enterSelect string
-	// if model.firstSheet.Done {
-	enterSelect = "⏎ / _ : Select • tab : focus next"
-	switch model.tabIndex {
-	case 1:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
-	case 2:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
-	case 3:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
+	if model.firstSheet.Done {
+		enterSelect = "⏎ / _ : Select • tab : focus next"
+		switch model.tabIndex {
+		case 1:
+			s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		case 2:
+			s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		case 3:
+			s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
 
+		}
+	} else {
+		return model.firstSheet.View()
 	}
 	// if model.swapTab {
 	// 	s += lipgloss.JoinVertical(lipgloss.Left,

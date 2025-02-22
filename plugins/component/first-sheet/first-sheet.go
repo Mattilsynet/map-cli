@@ -26,6 +26,10 @@ type Form struct {
 	Inputs []textinput.Model
 }
 
+func (fw *Form) Init() tea.Cmd {
+	return nil
+}
+
 func New() *Form {
 	firstView := &Form{}
 	firstView.Inputs = make([]textinput.Model, 3)
@@ -59,7 +63,7 @@ func New() *Form {
 	return firstView
 }
 
-func (fw *Form) Update(msg tea.Msg) tea.Cmd {
+func (fw *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -69,7 +73,7 @@ func (fw *Form) Update(msg tea.Msg) tea.Cmd {
 			case "enter":
 				if fw.cursor == len(fw.Inputs) {
 					fw.Done = true
-					return nil
+					return fw, nil
 				} else {
 					fw.cursor++
 				}
@@ -98,13 +102,13 @@ func (fw *Form) Update(msg tea.Msg) tea.Cmd {
 					fw.Inputs[i].PromptStyle = noStyle
 					fw.Inputs[i].TextStyle = noStyle
 				}
-				return tea.Batch(cmds...)
+				return fw, tea.Batch(cmds...)
 			}
 		}
 	}
 	cmd := fw.updateTextInputs(msg)
 
-	return cmd
+	return fw, cmd
 }
 
 func (fw *Form) updateTextInputs(msg tea.Msg) tea.Cmd {
