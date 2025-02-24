@@ -61,7 +61,7 @@ func New() (*Model, error) {
 	m.WadmModel = wadmModel
 	m.componentModel = componentModel
 	m.frameSelected = m.secondSheet
-	m.tabIndex = 1
+	m.tabIndex = 0
 	return &m, nil
 }
 
@@ -116,11 +116,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.frameSelected = m.componentModel
 		}
 	}
-	// if !m.firstSheet.Done {
-	//	return m, m.firstSheet.Update(msg)
-	// } else if !m.secondSheet.Done {
-	m.componentModel.UpdateRenderingContent(m.ResultConfig())
-	m.WadmModel.UpdateRenderingContent(m.ResultConfig())
+	if m.tabIndex > 0 {
+		m.componentModel.UpdateRenderingContent(m.ResultConfig())
+		m.WadmModel.UpdateRenderingContent(m.ResultConfig())
+	}
 	_, cmd := m.frameSelected.Update(msg)
 	return m, cmd
 	// } else {
