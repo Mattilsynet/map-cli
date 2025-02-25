@@ -17,11 +17,12 @@ const (
 )
 
 var (
-	width       = 45
-	height      = 45
-	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	width       = 40
+	height      = 35
+	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Center)
+	headerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
 	errorStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
-	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Center)
 	dotStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
 	mainStyle   = lipgloss.NewStyle().MarginLeft(2)
 	modelStyle  = lipgloss.NewStyle().
@@ -116,7 +117,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.frameSelected = m.componentModel
 		}
 	}
-	if m.tabIndex > 0 {
+	if m.firstSheet.Validate() == "" {
 		m.componentModel.UpdateRenderingContent(m.ResultConfig())
 		m.WadmModel.UpdateRenderingContent(m.ResultConfig())
 	}
@@ -142,42 +143,28 @@ func (model Model) View() string {
 		return "\n Quitting!\n\n"
 	}
 	var enterSelect string
-	if model.firstSheet.Done {
-		enterSelect = "⏎ / _ : Select • tab : focus next"
-		switch model.tabIndex {
-		case 1:
-			s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
-		case 2:
-			s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
-		case 3:
-			s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(fmt.Sprintf("%4s", model.secondSheet.View())), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
+	enterSelect = ""
+	switch model.tabIndex {
+	case 0:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		enterSelect = "⏎ : Select"
 
-		}
-	} else {
-		return model.firstSheet.View()
+	case 1:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), focusedModelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		enterSelect = "⏎ / _ : Select • tab : focus next"
+
+	case 2:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+	case 3:
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
 	}
-	// if model.swapTab {
-	// 	s += lipgloss.JoinVertical(lipgloss.Left,
-	// 		focusedModelStyle.Render(fmt.Sprintf("%s", "wtf wtf"),
-	// 			modelStyle.Render(fmt.Sprintf("%s", "generation stuff"))))
-	// } else {
-	// 	s += lipgloss.JoinVertical(lipgloss.Left,
-	// 		modelStyle.Render(fmt.Sprintf("%25s", "ehmmm"),
-	// 			focusedModelStyle.Render(fmt.Sprintf("%25s", "generation stuff"))))
-	// }
-	// } else {
-	// 	enterSelect = "⏎ : Select"
-	// 	s = model.firstSheet.View()
-	// }
-	tpl := "MAP - generate a wasmcloud component\n\n"
-	tpl += "%s"
+	tpl := ""
 	tpl += subtleStyle.Render("↑/↓ : Navigate") + dotStyle +
 		subtleStyle.Render(enterSelect) + dotStyle + subtleStyle.Render("q, ctrl+c : Quit")
 	// TODO: Generalize such that any view can yield a validation error
 	if err := model.firstSheet.Validate(); err != "" {
 		tpl += "\n\n" + errorStyle.Render(err)
 	}
-	s += helpStyle.Render(fmt.Sprintf("\ntab: focus next %s\n", "stuff"))
+	s += helpStyle.Render(tpl)
 	return s
-	// return mainStyle.Render("\n" + fmt.Sprintf(tpl, s) + "\n\n")
 }
