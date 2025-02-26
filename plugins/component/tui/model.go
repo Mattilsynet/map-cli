@@ -141,7 +141,8 @@ func (model Model) View() string {
 		return "\n Quitting!\n\n"
 	}
 	var enterSelect string
-	enterSelect = ""
+	// give me left right arrows
+	enterSelect = "←/→ : Left/Right"
 	switch model.tabIndex {
 	case 0:
 		s += focusedModelStyle.Render(model.firstSheet.View())
@@ -149,7 +150,7 @@ func (model Model) View() string {
 
 	case 1:
 		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
-		enterSelect = "⏎ / _ : Select • tab : focus next"
+		enterSelect = "⏎ / _ : Select " + dotStyle + subtleStyle.Render("TAB/shift+TAB : focus next/prev")
 
 	case 2:
 		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
@@ -157,7 +158,7 @@ func (model Model) View() string {
 		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
 	}
 	tpl := ""
-	tpl += subtleStyle.Render("↑/↓ : Navigate") + dotStyle +
+	tpl += subtleStyle.Render("\n↑/↓ : Up/Down") + dotStyle +
 		subtleStyle.Render(enterSelect) + dotStyle + subtleStyle.Render("q, ctrl+c : Quit")
 	// TODO: Generalize such that any view can yield a validation error
 	if err := model.firstSheet.Validate(); err != "" {

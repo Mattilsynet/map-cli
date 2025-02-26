@@ -135,7 +135,6 @@ func (fw *Form) View() string {
 		button = &focusedNextButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
-	// b.WriteString(helpStyle.Render("cursor is: " + strconv.Itoa(m.NameAndPathCursor)))
 	return b.String()
 }
 
