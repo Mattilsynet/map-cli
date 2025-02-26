@@ -80,10 +80,6 @@ func (mo *Model) UpdateRenderingContent(config *component.Config) {
 // Update is called when a message is received. Use it to ins:pect messages
 // and, in response, update the model and/or send a command.
 func (mo *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
-	case tea.QuitMsg:
-		return mo, tea.Quit
-	}
 	var cmd tea.Cmd
 	mo.viewport, cmd = mo.viewport.Update(msg)
 	return mo, cmd

@@ -57,6 +57,7 @@ func New() *Form {
 		}
 		firstView.Inputs[i] = t
 	}
+	// TODO: When we're done testing, remove these default values
 	firstView.Inputs[0].SetValue("abc")
 	firstView.Inputs[1].SetValue("github.com/Mattilsynet/abc")
 	firstView.Inputs[2].SetValue("/home/solve/git/abc")

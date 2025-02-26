@@ -27,6 +27,14 @@ func init() {
 	{{ if .ExportNatsCoreRequestReplyWit -}}
 	conn.RegisterRequestReply({{.ComponentName}}RequestReplier)
 	{{ end -}}
+	{{ if .ExportNatsCoreWit -}}
+        conn.RegisterSubscription({{ .ComponentName }}Subscriber)
+	{{ end -}}
+	{{ if .ImportNatsCoreWit -}}
+	//nats-core publish
+	msg := nats.Msg{"some-subject", "", []byte("hello world")}
+	conn.Publish(msg)
+	{{ end -}}
 	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
 	var err error
 	js, err = conn.Jetstream()
@@ -35,12 +43,22 @@ func init() {
 		return
 	}
 	{{ end -}}
+	{{ if .ImportNatsJetstreamWit -}}
+        err := js.Publish("some-subject", []byte("some data"))
+	if err != nil {
+		logger.Error("error publishing message", "err", err) //most likely due to no streams listenong your subject
+	}
+        {{ end -}}
 	{{ if .ComponentNatsKeyValue -}}
 	kv, err = js.KeyValue()
 	if kv == nil {
 		logger.Error("error getting keyvalue", "err", err)
 		return
 	}
+	//kv.getAll()), all keys and their values
+	//kv.Get("some-key")
+	//kv.Put("some-key", []byte("your-value"))
+	//kv.Delete("some-key")
 	{{ end -}}
 	{{ if .ExportNatsJetstreamWit -}}
         js.Subscribe({{.ComponentName}}Consumer, logger)	
@@ -49,7 +67,6 @@ func init() {
 {{ if .ExportNatsJetstreamWit }}
 func {{ .ComponentName }}Consumer(msg *nats.Msg) {
 // this is where you put your application logic when a nats msg arrives at specified stream subject from wadm.yaml
-// here you can use nats.Publish or kv.Get, etc depending on what you asked for
 }
 {{ end }}
 {{ if .ExportNatsCoreRequestReplyWit }}

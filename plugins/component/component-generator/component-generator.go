@@ -40,7 +40,7 @@ func setBools(config *Config) {
 	// TODO: Really unfortunate logic to have to know what the above layer does, i.e., free text strings conveyed from tui, should be structured in a middle mapper
 	config.ImportNatsCoreWit = slices.Contains(config.Capabilities, "nats-core:publish")
 	config.ExportNatsCoreWit = slices.Contains(config.Capabilities, "nats-core:subscription")
-	config.ExportNatsCoreRequestReplyWit = slices.Contains(config.Capabilities, "nats-core-wit")
+	config.ExportNatsCoreRequestReplyWit = slices.Contains(config.Capabilities, "nats-core:request/reply")
 	config.ImportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:publish")
 	config.ExportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:consumer")
 	config.ImportNatsKvWit = slices.Contains(config.Capabilities, "nats-kv:key-value")

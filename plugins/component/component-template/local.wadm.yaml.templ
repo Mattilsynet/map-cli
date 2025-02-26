@@ -20,7 +20,7 @@ spec:
         - type: spreadscaler
           properties:
             replicas: 1
-{{ if .ExportNatsCoreWit -}}
+{{ if or .ImportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
 # Link component with nats-core to get publishing capability
         - type: link
           properties:
@@ -45,7 +45,7 @@ spec:
             package: map-kv
             interfaces: [key-value]
 {{ end -}}
-{{ if or .ImportNatsCoreWit .ExportNatsCoreWit -}}
+{{ if or .ImportNatsCoreWit .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
 # Setup nats-core provider, such that it's deployed to the wadm server and made available for this application for linking 
     - name: nats-core
       type: capability
@@ -59,6 +59,19 @@ spec:
         - type: spreadscalar
           properties:
             replicas: 1
+{{ end -}}
+{{ if or .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
+# linking such that we get subscription to our component
+        - type: link
+          properties:
+            target: {{ .ComponentName }}
+            namespace: wasmcloud
+            package: messaging
+            interfaces: [handler]
+            source_config:
+              - name: simple-subscription # this name is not important
+                properties:
+                  subscriptions: wasmcloud.echo # This is the subscription endpoint, do a nats pub "wasmcloud.echo" to test
 {{ end -}}
 {{ if .ImportNatsJetstreamWit -}}
 # linking such that nats-jetstream provider supplies js.publish capability to component
@@ -75,11 +88,12 @@ spec:
             interfaces: [jetstream-publish]
 {{ end }}
 {{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
-# Nats Jetstream provider, provides consumer possibilities, look in source config underneath
+# Nats Jetstream provider, provides consumer/publish possibilities, look in source config underneath
     - name: nats-jetstream
       type: capability
       properties:
         image: ghcr.io/Mattilsynet/map-nats-jetstream:v0.0.1-pre-17
+{{ if .ExportNatsJetstreamWit }}
       traits:
         - type: link
           properties:
@@ -90,15 +104,16 @@ spec:
                 - name: nats-jetstream-nats-url
                   properties:
                     url: "nats://localhost:4222"
-                - name: nats-jetstream-consumer-config
+                - name: nats-jetstream-config
                   properties:
                     stream-name: "stream-name"
-                    stream-retention-policy: "workqueue" # oneof "interest, workqueue, limits"
                     subject: "special.subject.>"
                     durable-consumer-name: "{{ .ComponentName }}-consumer"
+                    stream-retention-policy: "workqueue" # oneof "interest, workqueue, limits" 
             namespace: mattilsynet
             package: provider-jetstream-nats
             interfaces: [jetstream-consumer]
+{{ end }}
 {{ end -}}
 {{ if .ImportNatsKvWit -}}
 # Nats KV provider, look in component target for configuration example, OBS! watch-key not implemented as of 12.02.2025 

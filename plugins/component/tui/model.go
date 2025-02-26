@@ -1,6 +1,8 @@
 package prompt
 
 import (
+	"fmt"
+
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
 	project "github.com/Mattilsynet/map-cli/plugins/component/component-template"
 	display_example "github.com/Mattilsynet/map-cli/plugins/component/display-example"
@@ -18,7 +20,7 @@ var (
 	width       = 45
 	height      = 45
 	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Left)
-	headerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
+	headerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69")).Align(lipgloss.Center)
 	errorStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
 	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	dotStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
@@ -26,7 +28,9 @@ var (
 	modelStyle  = lipgloss.NewStyle().
 			BorderStyle(lipgloss.HiddenBorder())
 	focusedModelStyle = lipgloss.NewStyle().
+				MarginTop(1).
 				BorderStyle(lipgloss.NormalBorder()).
+				Align(lipgloss.Left).
 				BorderForeground(lipgloss.Color("69"))
 )
 
@@ -39,6 +43,7 @@ type Model struct {
 	componentModel *display_example.Model
 	frameSelected  tea.Model
 	tabIndex       int
+	updateMsg      string
 }
 
 func (m Model) Init() tea.Cmd {
@@ -85,7 +90,8 @@ func (m Model) ResultConfig() *component.Config {
 // 2 = WadmModel
 // 3 = componentModel
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
 		k := msg.String()
 		if k == "q" || k == "ctrl+c" {
 			m.quitting = true
@@ -115,8 +121,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 3:
 			m.frameSelected = m.componentModel
 		}
-	}
+	case tea.WindowSizeMsg:
+		// TODO: Remove debugging when we've fixed window rendering depending on resizing
+		m.updateMsg = fmt.Sprintf("Debugging: Window size h%d:w%d", msg.Height, msg.Width)
+		m.updateMsg += fmt.Sprintf("\nDebugging:%v", m.ResultConfig())
 
+	}
 	_, cmd := m.frameSelected.Update(msg)
 	if m.firstSheet.Done {
 		m.componentModel.UpdateRenderingContent(m.ResultConfig())
@@ -145,22 +155,25 @@ func (model Model) View() string {
 	enterSelect = "←/→ : Left/Right"
 	switch model.tabIndex {
 	case 0:
+		s += headerStyle.Render("Create a new component")
 		s += focusedModelStyle.Render(model.firstSheet.View())
 		enterSelect = "⏎ : Select"
-
 	case 1:
 		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
 		enterSelect = "⏎ / _ : Select " + dotStyle + subtleStyle.Render("TAB/shift+TAB : focus next/prev")
-
 	case 2:
 		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		enterSelect += dotStyle + subtleStyle.Render("TAB/shift+TAB : focus next/prev")
 	case 3:
 		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
+		enterSelect += dotStyle + subtleStyle.Render("TAB/shift+TAB : focus next/prev")
 	}
+	// BUG: enterSelect doesn't get rendered if validation returns too many results and we navigate
 	tpl := ""
 	tpl += subtleStyle.Render("\n↑/↓ : Up/Down") + dotStyle +
 		subtleStyle.Render(enterSelect) + dotStyle + subtleStyle.Render("q, ctrl+c : Quit")
 	// TODO: Generalize such that any view can yield a validation error
+	s += helpStyle.Render("\n" + model.updateMsg)
 	if err := model.firstSheet.Validate(); err != "" {
 		tpl += "\n\n" + errorStyle.Render(err)
 	}
