@@ -7,6 +7,3 @@ Mattilsynet operational cli for resources, supports authentication towards NATS.
     1. #TODO: make it possible to switch projects somehow in conjunction with nats credentials, don't know how yet.
 2. GCP-project creation within managed-environment wish, this needs to be formalized somehow. #TODO
 
-# Cool features:
-1. loading bar  
-2. Tui show wadm and component.go dynamically with choices made from mc component generate .. 
