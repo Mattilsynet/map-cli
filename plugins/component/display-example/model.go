@@ -6,6 +6,7 @@ import (
 
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
 	"github.com/alecthomas/chroma/quick"
+	"github.com/alecthomas/chroma/styles"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -69,7 +70,7 @@ func (mo *Model) UpdateRenderingContent(config *component.Config) {
 		fmt.Printf("failed to render template: %v", err)
 	}
 	var buffer bytes.Buffer
-	err = quick.Highlight(&buffer, mo.commentStyle+mo.language+"\n"+mo.renderedTemplateContent, mo.language, "terminal256", "monokai")
+	err = quick.Highlight(&buffer, mo.commentStyle+mo.language+"\n"+mo.renderedTemplateContent, mo.language, "terminal256", styles.DoomOne.Name)
 	if err != nil {
 		fmt.Printf("failed to highlight code: %v", err)
 	}
