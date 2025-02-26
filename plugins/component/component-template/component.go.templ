@@ -32,7 +32,7 @@ func init() {
 	{{ end -}}
 	{{ if .ImportNatsCoreWit -}}
 	//nats-core publish
-	msg := nats.Msg{"some-subject", "", []byte("hello world")}
+	msg := &nats.Msg{Subject: "some-subject", Reply: "", Data: []byte("hello world")}
 	conn.Publish(msg)
 	{{ end -}}
 	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
@@ -44,9 +44,9 @@ func init() {
 	}
 	{{ end -}}
 	{{ if .ImportNatsJetstreamWit -}}
-        err := js.Publish("some-subject", []byte("some data"))
-	if err != nil {
-		logger.Error("error publishing message", "err", err) //most likely due to no streams listenong your subject
+        jsPubErr := js.Publish("some-subject", []byte("some data"))
+	if jsPubErr != nil {
+		logger.Error("error publishing message", "err", jsPubErr) //most likely due to no streams listenong your subject
 	}
         {{ end -}}
 	{{ if .ComponentNatsKeyValue -}}
