@@ -1,8 +1,6 @@
 package prompt
 
 import (
-	"fmt"
-
 	"github.com/Mattilsynet/map-cli/plugins/component/component-generator"
 	project "github.com/Mattilsynet/map-cli/plugins/component/component-template"
 	display_example "github.com/Mattilsynet/map-cli/plugins/component/display-example"
@@ -17,12 +15,12 @@ const (
 )
 
 var (
-	width       = 40
-	height      = 35
-	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Center)
+	width       = 45
+	height      = 45
+	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Left)
 	headerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
 	errorStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("160"))
-	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Align(lipgloss.Center)
+	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 	dotStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
 	mainStyle   = lipgloss.NewStyle().MarginLeft(2)
 	modelStyle  = lipgloss.NewStyle().
@@ -93,16 +91,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return &m, tea.Quit
 		}
-		if k == "tab" {
+
+		if k == "tab" && m.tabIndex != 0 {
 			m.tabIndex++
 			if m.tabIndex == 4 {
-				m.tabIndex = 0
+				m.tabIndex = 1
 			}
 
 		}
-		if k == "shift+tab" {
+		if k == "shift+tab" && m.tabIndex != 0 {
 			m.tabIndex--
-			if m.tabIndex == -1 {
+			if m.tabIndex == 0 {
 				m.tabIndex = 3
 			}
 		}
@@ -117,21 +116,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.frameSelected = m.componentModel
 		}
 	}
-	if m.firstSheet.Validate() == "" {
+
+	_, cmd := m.frameSelected.Update(msg)
+	if m.firstSheet.Done {
 		m.componentModel.UpdateRenderingContent(m.ResultConfig())
 		m.WadmModel.UpdateRenderingContent(m.ResultConfig())
 	}
-	_, cmd := m.frameSelected.Update(msg)
+	if m.tabIndex == 0 && m.firstSheet.Done {
+		m.tabIndex = 1
+	}
+	if m.firstSheet.Done && m.secondSheet.Done {
+		m.Finished = true
+		return &m, tea.Quit
+	}
 	return m, cmd
-	// } else {
-	// 	if m.firstSheet.Done && m.secondSheet.Done {
-	// 		m.Finished = true
-
-	// 		return &m, tea.Quit
-	// 	}
-	// }
-	fmt.Printf("Model: %v\n, error state, this should never happen!!", m)
-	return m, tea.Quit
 }
 
 func (model Model) View() string {
@@ -146,17 +144,17 @@ func (model Model) View() string {
 	enterSelect = ""
 	switch model.tabIndex {
 	case 0:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		s += focusedModelStyle.Render(model.firstSheet.View())
 		enterSelect = "⏎ : Select"
 
 	case 1:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), focusedModelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		s += lipgloss.JoinHorizontal(lipgloss.Left, focusedModelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
 		enterSelect = "⏎ / _ : Select • tab : focus next"
 
 	case 2:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), focusedModelStyle.Render(model.WadmModel.View()), modelStyle.Render(model.componentModel.View()))
 	case 3:
-		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.firstSheet.View()), modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
+		s += lipgloss.JoinHorizontal(lipgloss.Left, modelStyle.Render(model.secondSheet.View()), modelStyle.Render(model.WadmModel.View()), focusedModelStyle.Render(model.componentModel.View()))
 	}
 	tpl := ""
 	tpl += subtleStyle.Render("↑/↓ : Navigate") + dotStyle +
