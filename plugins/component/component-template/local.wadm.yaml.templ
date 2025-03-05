@@ -80,7 +80,7 @@ spec:
             target:
               name: nats-jetstream
               config:
-                - name: nats-jetstream-config
+                - name: nats-jetstream-config-publish
                   properties:
                     url: "nats://127.0.0.1:4222"
             namespace: mattilsynet
@@ -104,7 +104,7 @@ spec:
                 - name: nats-jetstream-nats-url
                   properties:
                     url: "nats://127.0.0.1:4222"
-                - name: nats-jetstream-config
+                - name: nats-jetstream-config-consumer
                   properties:
                     stream-name: "stream-name"
                     subject: "special.subject.>"

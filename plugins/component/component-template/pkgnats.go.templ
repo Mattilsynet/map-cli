@@ -14,7 +14,9 @@ import (
 	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit .ImportNatsCoreWit -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/types"
 	{{ end -}}
+	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit .ImportNatsCoreWit -}}
 	"github.com/bytecodealliance/wasm-tools-go/cm"
+        {{ end -}}
 )
 type (
 	Conn struct {
