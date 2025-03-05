@@ -10,7 +10,7 @@ world {{ .WitComponentName -}} {
   {{ if or .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
   export wasmcloud:messaging/handler@0.2.0;
   {{ end }}
-  {{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
+  {{ if or .ImportNatsJetstreamWit}}
   import mattilsynet:provider-jetstream-nats/jetstream-publish;
   {{ end -}}
   {{ if .ExportNatsJetstreamWit -}}

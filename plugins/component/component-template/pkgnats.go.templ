@@ -11,7 +11,9 @@ import (
 	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/handler"
 	{{ end -}}
+	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit .ImportNatsCoreWit -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/types"
+	{{ end -}}
 	"github.com/bytecodealliance/wasm-tools-go/cm"
 )
 type (
@@ -39,7 +41,7 @@ type (
 func NewConn() *Conn {
 	return &Conn{}
 }
-{{ if .ExportNatsCoreWit -}}
+{{ if or .ExportNatsCoreWit .ExportNatsJetstreamWit -}}
 type MsgHandler func(msg *Msg)
 {{ end -}}
 
@@ -61,6 +63,7 @@ func FromBrokerMessageToNatsMessage(bm types.BrokerMessage) *Msg {
 }
 {{ end }}
 
+	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit .ImportNatsCoreWit -}}
 func ToBrokenMessageFromNatsMessage(nm *Msg) types.BrokerMessage {
 	if nm.Reply == "" {
 		return types.BrokerMessage{
@@ -76,6 +79,7 @@ func ToBrokenMessageFromNatsMessage(nm *Msg) types.BrokerMessage {
 		}
 	}
 }
+{{ end -}}
 {{ if or .ImportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
 func (nc *Conn) Publish(msg *Msg) error {
 	bm := ToBrokenMessageFromNatsMessage(msg)
