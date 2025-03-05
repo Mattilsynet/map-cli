@@ -40,7 +40,7 @@ spec:
                 - name: map-nats-kv-config
                   properties:
                     bucket: "my-bucket"
-                    url: "nats://localhost:4222"
+                    url: "nats://127.0.0.1:4222"
             namespace: mattilsynet
             package: map-kv
             interfaces: [key-value]
@@ -54,7 +54,7 @@ spec:
         config:
           - name: nats-core-config
             properties:
-              cluster_uris: "nats://localhost:4222"
+              cluster_uris: "nats://127.0.0.1:4222"
       traits:
         - type: spreadscalar
           properties:
@@ -82,7 +82,7 @@ spec:
               config:
                 - name: nats-jetstream-config
                   properties:
-                    url: "nats://localhost:4222"
+                    url: "nats://127.0.0.1:4222"
             namespace: mattilsynet
             package: provider-jetstream-nats
             interfaces: [jetstream-publish]
@@ -103,7 +103,7 @@ spec:
               config:
                 - name: nats-jetstream-nats-url
                   properties:
-                    url: "nats://localhost:4222"
+                    url: "nats://127.0.0.1:4222"
                 - name: nats-jetstream-config
                   properties:
                     stream-name: "stream-name"
