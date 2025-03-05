@@ -4,10 +4,10 @@ world {{ .WitComponentName -}} {
   //wasmcloud-go sdk for ease of logging and other goodies
   include wasmcloud:component-go/imports@0.1.0;
   
-  {{ if or .ImportNatsCoreWit .ExportNatsCoreWit -}}
+  {{ if or .ImportNatsCoreWit .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
   import wasmcloud:messaging/consumer@0.2.0;
   {{ end -}}
-  {{ if .ExportNatsCoreWit -}}
+  {{ if or .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
   export wasmcloud:messaging/handler@0.2.0;
   {{ end }}
   {{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}

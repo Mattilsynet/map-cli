@@ -9,7 +9,7 @@ import (
 )
 var (
 	logger *slog.Logger
-	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream -}}
+	{{ if or .ComponentNatsCore .ComponentNatsKeyValue .ComponentNatsJetstream .ExportNatsCoreRequestReplyWit -}}
 	conn *nats.Conn
 	{{ end -}}
 	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}

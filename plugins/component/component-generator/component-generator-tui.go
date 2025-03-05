@@ -83,10 +83,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Update progress bar
 		progressCmd := m.progress.SetPercent(float64(m.index) / float64(len(m.pathContentList)))
 		pathContentNext := m.pathContentList[m.index]
-		if pathContentNext.Content == "" {
-			m.index++
-			return m, nil
-		}
 		return m, tea.Batch(
 			progressCmd,
 			tea.Printf("%s %s", checkMark, pathContent.Path),                       // print success message above our program
