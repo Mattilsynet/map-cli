@@ -1,4 +1,4 @@
-{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue .ComponentNatsCore -}}
+{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue .ComponentNatsCore .ExportNatsCoreRequestReplyWit -}}
 package nats
 import (
 	"errors"
@@ -39,7 +39,7 @@ type MsgHandler func(msg *Msg)
 
 {{ end -}}
 
-{{ if .ExportNatsCoreWit -}}
+{{ if or .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
 func FromBrokerMessageToNatsMessage(bm types.BrokerMessage) *Msg {
 	if bm.ReplyTo.None() {
 		return &Msg{

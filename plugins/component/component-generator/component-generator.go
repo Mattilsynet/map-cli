@@ -32,8 +32,19 @@ func GetPathContentList(config *Config) ([]PathContent, error) {
 	if err != nil {
 		return nil, err
 	}
+	pathContent = CleanEmptyContent(pathContent)
 
 	return pathContent, nil
+}
+
+func CleanEmptyContent(pathContent []PathContent) []PathContent {
+	cleaned := make([]PathContent, 0)
+	for _, pc := range pathContent {
+		if pc.Content != "" && pc.Content != "\n" {
+			cleaned = append(cleaned, pc)
+		}
+	}
+	return cleaned
 }
 
 func setBools(config *Config) {
