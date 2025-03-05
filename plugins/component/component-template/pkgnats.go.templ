@@ -2,14 +2,18 @@
 package nats
 import (
 	"errors"
+	{{ if or .ExportNatsCoreRequestReplyWit .ImportNatsCoreWit -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/consumer"
+	{{ end -}}
+	{{ if or .ExportNatsCoreRequestReplyWit .ExportNatsCoreWit -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/handler"
+	{{ end -}}
 	"{{ .Repository }}/gen/wasmcloud/messaging/types"
 	"github.com/bytecodealliance/wasm-tools-go/cm"
 )
 type (
 	Conn struct {
-        {{ if .ComponentNatsJetstream -}}
+        {{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
 		  js JetStreamContext
 	{{ end -}}
 	}
@@ -34,9 +38,6 @@ func NewConn() *Conn {
 }
 {{ if .ExportNatsCoreWit -}}
 type MsgHandler func(msg *Msg)
-
-
-
 {{ end -}}
 
 {{ if or .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}}
