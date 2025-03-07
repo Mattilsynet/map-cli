@@ -19,7 +19,8 @@ type Config struct {
 	ExportNatsCoreRequestReplyWit,
 	ImportNatsJetstreamWit,
 	ExportNatsJetstreamWit,
-	ImportNatsKvWit bool
+	ImportNatsKvWit,
+	ExportNatsKvWit bool
 }
 
 type Opt func(*Config)

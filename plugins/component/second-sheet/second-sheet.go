@@ -60,7 +60,7 @@ func New() *Form {
 		},
 		{
 			natsKv,
-			[]*Capability{{"key-value", !selected}},
+			[]*Capability{{"key-value", !selected}, {"watch-all", !selected}},
 		},
 	}
 	form.lenCatalogue = countCapabilities(form.Catalogue)

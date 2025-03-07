@@ -1,10 +1,13 @@
-{{ if .ImportNatsKvWit -}}
+{{ if or .ImportNatsKvWit .ExportNatsKvWit -}}
 package nats
 
 import (
 	"errors"
 
 	"{{ .Repository }}/gen/mattilsynet/map-kv/key-value"
+	{{ if .ExportNatsKvWit -}}
+	"{{ .Repository }}/gen/mattilsynet/map-kv/key-value-watcher"
+	{{ end -}}
 	"github.com/bytecodealliance/wasm-tools-go/cm"
 )
 
@@ -15,7 +18,18 @@ type (
 		value []byte
 	}
 )
-
+{{ if .ExportNatsKvWit -}}
+type KvWatcher func(kv *KeyValueEntry)
+	
+func RegisterKvWatcher(kvWatcher fn KvWatcher(*KeyValueEntry)) {
+keyvaluewatcher.Exports.WatchAll = func(keyValueEntry keyvaluewatcher.KeyValueEntry) (result cm.Result[string, struct{}, string]) {
+  kve := KeyValueEntry{key: keyValueEntry.Key, value: keyValueEntry.Value.Slice())}
+  fn(&kve)
+  return cm.OK[cm.Result[string, struct{}, string}]](struct{}{})
+}	
+}
+{{ end -}}
+{{ if .ImportNatsKvWit -}}
 func (e *KeyValueEntry) Key() string   { return e.key }
 func (e *KeyValueEntry) Value() []byte { return e.value }
 
@@ -104,4 +118,5 @@ func (js *KeyValue) ListKeys() ([]string, error) {
 	}
 	return nil, errors.New("unknown error when listing keys in map-kv")
 }
-{{ end }}
+{{ end -}}
+{{ end -}}
