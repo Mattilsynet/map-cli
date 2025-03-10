@@ -26,7 +26,7 @@ type (
 	}
 	{{ if or .ComponentNatsJetstream .ComponentNatsKeyValue -}}
 	JetStreamContext struct {
-		{{ if .ImportNatsKvWit -}}
+		{{ if or .ImportNatsKvWit .ExportNatsKvWit -}}
 		bucket KeyValue
 		{{ end -}}
 	}

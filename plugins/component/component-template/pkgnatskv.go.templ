@@ -2,9 +2,11 @@
 package nats
 
 import (
+        {{ if .ImportNatsKvWit -}}
 	"errors"
-
 	"{{ .Repository }}/gen/mattilsynet/map-kv/key-value"
+	{{ end -}}
+	"{{ .Repository }}/gen/mattilsynet/map-kv/types"
 	{{ if .ExportNatsKvWit -}}
 	"{{ .Repository }}/gen/mattilsynet/map-kv/key-value-watcher"
 	{{ end -}}
@@ -14,29 +16,30 @@ import (
 type (
 	KeyValue      struct{}
 	KeyValueEntry struct {
-		key   string
-		value []byte
+		Key   string
+		Value []byte
 	}
 )
-{{ if .ExportNatsKvWit -}}
-type KvWatcher func(kv *KeyValueEntry)
-	
-func RegisterKvWatcher(kvWatcher fn KvWatcher(*KeyValueEntry)) {
-keyvaluewatcher.Exports.WatchAll = func(keyValueEntry keyvaluewatcher.KeyValueEntry) (result cm.Result[string, struct{}, string]) {
-  kve := KeyValueEntry{key: keyValueEntry.Key, value: keyValueEntry.Value.Slice())}
-  fn(&kve)
-  return cm.OK[cm.Result[string, struct{}, string}]](struct{}{})
-}	
-}
-{{ end -}}
-{{ if .ImportNatsKvWit -}}
-func (e *KeyValueEntry) Key() string   { return e.key }
-func (e *KeyValueEntry) Value() []byte { return e.value }
-
 func (js *JetStreamContext) KeyValue() (*KeyValue, error) {
 	js.bucket = KeyValue{}
 	return &js.bucket, nil
 }
+{{ if or .ExportNatsKvWit -}}
+type KvWatcher func(kv *KeyValueEntry)
+	
+func (kv *KeyValue) RegisterKvWatchAll(fn KvWatcher) {
+	keyvaluewatcher.Exports.WatchAll = func(keyValueEntry types.KeyValueEntry) (result cm.Result[string, struct{}, string]) {
+	  kve := KeyValueEntry{Key: keyValueEntry.Key, Value: keyValueEntry.Value.Slice()}
+	  fn(&kve)
+	  return cm.OK[cm.Result[string, struct{}, string]](struct{}{})
+        }	
+}
+{{ end -}}
+{{ if .ImportNatsKvWit -}}
+func (e *KeyValueEntry) Key() string   { return e.key }
+func (e *KeyValueEntry) Value() []byte { return e.value }
+
+
 
 func (js *KeyValue) Get(key string) (*KeyValueEntry, error) {
 	result := keyvalue.Get(key)

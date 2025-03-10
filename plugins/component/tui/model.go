@@ -70,19 +70,20 @@ func New() (*Model, error) {
 }
 
 func (m Model) ResultConfig() *component.Config {
-	config := &component.Config{}
-	config.ComponentName = m.firstSheet.Inputs[0].Value()
-	config.Repository = m.firstSheet.Inputs[1].Value()
-	config.Path = m.firstSheet.Inputs[2].Value()
+	componentName := m.firstSheet.Inputs[0].Value()
+	repository := m.firstSheet.Inputs[1].Value()
+	path := m.firstSheet.Inputs[2].Value()
+	listOfCapabilities := []string{}
 	for _, provider := range m.secondSheet.Catalogue {
 		for _, capability := range provider.Capabilities {
 			if capability.Selected {
 				// INFO: We append provider prefix such that the permutation is unique, think nats-core:publish vs nats-jetstream:publish
-				config.Capabilities = append(config.Capabilities, string(provider.Name)+":"+capability.Name)
+				listOfCapabilities = append(listOfCapabilities, string(provider.Name)+":"+capability.Name)
 			}
 		}
 	}
-	return config
+	config := component.NewConfig(path, componentName, repository, listOfCapabilities, component.WithComponentCode(), component.WithWit())
+	return &config
 }
 
 // 0 = firstSheet

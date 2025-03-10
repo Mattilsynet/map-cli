@@ -1,6 +1,7 @@
-{{if or .ImportNatsJetstreamWit  .ExportNatsJetstreamWit -}}
+{{if or .ImportNatsJetstreamWit  .ExportNatsJetstreamWit .ImportNatsKvWit .ExportNatsKvWit -}}
 package nats
 
+{{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
 import (
 	"log/slog"
 	"github.com/bytecodealliance/wasm-tools-go/cm"
@@ -9,6 +10,7 @@ import (
 	jetstream_types "{{.Repository}}/gen/mattilsynet/provider-jetstream-nats/types"
 	"errors"
 )
+{{ end -}}
 func (c *Conn) Jetstream() (*JetStreamContext, error) {
 	return &c.js, nil
 }
@@ -40,7 +42,7 @@ func toWitExportSubscription(msgHandler MsgHandler) func(msg jetstream_types.Msg
 }
 
 {{ end -}}
-
+{{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
 func (js *JetStreamContext) Publish(subj string, data []byte) error {
 	return js.PublishMsg(&Msg{Subject: subj, Data: data})
 }
@@ -68,4 +70,5 @@ func toWitNatsHeaders(header map[string][]string) cm.List[jetstream_types.KeyVal
 	}
 	return cm.ToList(keyValueList)
 }
+{{ end -}}
 {{ end }}

@@ -5,6 +5,6 @@ component = "https://github.com/wasmCloud/component-sdk-go/archive/v0.0.5.tar.gz
 {{ if or .ImportNatsCoreWit .ExportNatsCoreWit .ExportNatsCoreRequestReplyWit -}} 
 messaging = "https://github.com/wasmCloud/messaging/archive/v0.2.0.tar.gz"
 {{ end -}}
-{{ if .ImportNatsKvWit -}} 
-keyvalue = "https://github.com/Mattilsynet/map-nats-kv/archive/v0.0.2-pre-7.tar.gz"
+{{ if or .ImportNatsKvWit .ExportNatsKvWit -}} 
+keyvalue = "https://github.com/Mattilsynet/map-nats-kv/archive/v0.0.2-pre-15.tar.gz"
 {{ end -}}

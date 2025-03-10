@@ -55,15 +55,19 @@ func init() {
 		logger.Error("error getting keyvalue", "err", err)
 		return
 	}
-	//kv.getAll()), all keys and their values
-	//kv.Get("some-key")
-	//kv.Put("some-key", []byte("your-value"))
-	//kv.Delete("some-key")
 	{{ end -}}
 	{{ if .ExportNatsJetstreamWit -}}
         js.Subscribe({{.ComponentName}}Consumer, logger)	
-	{{ end }}
+	{{ end -}}
+	{{ if .ExportNatsKvWit -}}
+	kv.RegisterKvWatchAll({{ .ComponentName }}Watcher)
+	{{ end -}}
 }
+
+func {{.ComponentName}}Watcher(kv *nats.KeyValueEntry) {
+  logger.Info("keyvalue watcher", "key", kv.Key, "value", string(kv.Value))
+}
+
 {{ if .ExportNatsJetstreamWit }}
 func {{ .ComponentName }}Consumer(msg *nats.Msg) {
 // this is where you put your application logic when a nats msg arrives at specified stream subject from wadm.yaml

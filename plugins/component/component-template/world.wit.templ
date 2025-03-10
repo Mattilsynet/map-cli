@@ -17,7 +17,9 @@ world {{ .WitComponentName -}} {
   export mattilsynet:provider-jetstream-nats/jetstream-consumer;
   {{ end }}
   {{ if .ImportNatsKvWit -}}
-  //nats-kv watch keys hasn't been implemented yet in github.com/Mattilsynet/map-nats-kv
   import mattilsynet:map-kv/key-value;
-  {{ end }}
+  {{ end -}}
+  {{ if .ExportNatsKvWit -}} 
+  export mattilsynet:map-kv/key-value-watcher;
+  {{ end -}}
 }

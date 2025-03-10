@@ -115,10 +115,25 @@ spec:
             interfaces: [jetstream-consumer]
 {{ end }}
 {{ end -}}
-{{ if .ImportNatsKvWit -}}
+{{ if or .ImportNatsKvWit .ExportNatsKvWit -}}
 # Nats KV provider, look in component target for configuration example, OBS! watch-key not implemented as of 12.02.2025 
     - name: map-nats-kv
       type: capability
       properties:
-        image: ghcr.io/mattilsynet/map-nats-kv:v0.0.2-pre-9
+        image: ghcr.io/Mattilsynet/map-nats-kv:v0.0.2-pre-15
+#Link the component to nats-kv to watch-all on a given bucket
+      traits:
+        - type: link
+          properties:
+            target: {{ .ComponentName}}
+            namespace: mattilsynet
+            package: map-kv
+            interfaces: [key-value-watcher]
+            source_config:
+              - name: nats-kv-watcher-config
+                properties:
+                  bucket: "my-bucket"
+                  url: "nats://localhost:4222"
+                  #startup_time is in seconds, and it's how many seconds before the provider starts, the downside of this is that you have to make a qualified guess or else this might not work. Wasmcloud doesn't supply us with a component health check which the provider can wait for yet
+                  startup_time: "5"
 {{ end }}

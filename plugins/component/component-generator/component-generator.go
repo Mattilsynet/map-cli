@@ -55,10 +55,11 @@ func setBools(config *Config) {
 	config.ImportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:publish")
 	config.ExportNatsJetstreamWit = slices.Contains(config.Capabilities, "nats-jetstream:consumer")
 	config.ImportNatsKvWit = slices.Contains(config.Capabilities, "nats-kv:key-value")
+	config.ExportNatsKvWit = slices.Contains(config.Capabilities, "nats-kv:watch-all")
 
 	config.ComponentNatsCore = config.ImportNatsCoreWit || config.ExportNatsCoreWit
 	config.ComponentNatsJetstream = config.ImportNatsJetstreamWit || config.ExportNatsJetstreamWit
-	config.ComponentNatsKeyValue = config.ImportNatsKvWit
+	config.ComponentNatsKeyValue = config.ImportNatsKvWit || config.ExportNatsKvWit
 }
 
 func GenerateAndInstall(projectRootPath, path, content string) error {
