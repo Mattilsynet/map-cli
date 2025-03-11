@@ -60,6 +60,7 @@ func setBools(config *Config) {
 	config.ComponentNatsCore = config.ImportNatsCoreWit || config.ExportNatsCoreWit
 	config.ComponentNatsJetstream = config.ImportNatsJetstreamWit || config.ExportNatsJetstreamWit
 	config.ComponentNatsKeyValue = config.ImportNatsKvWit || config.ExportNatsKvWit
+	config.ComponentCronJob = slices.Contains(config.Capabilities, "cron-job:cron-handler")
 }
 
 func GenerateAndInstall(projectRootPath, path, content string) error {

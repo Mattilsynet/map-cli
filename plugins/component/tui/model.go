@@ -82,7 +82,7 @@ func (m Model) ResultConfig() *component.Config {
 			}
 		}
 	}
-	config := component.NewConfig(path, componentName, repository, listOfCapabilities, component.WithComponentCode(), component.WithWit())
+	config := component.NewConfig(path, componentName, repository, listOfCapabilities, component.WithWit())
 	return &config
 }
 

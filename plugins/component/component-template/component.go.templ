@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	
 	"go.wasmcloud.dev/component/log/wasilog"	
+	{{ if or .ComponentNatsJetstream .ComponentNatsCore .ComponentNatsKeyValue}}
 	"{{ .Repository }}/pkg/nats"
+	{{ end -}}
 )
 var (
 	logger *slog.Logger
@@ -62,8 +64,16 @@ func init() {
 	{{ if .ExportNatsKvWit -}}
 	kv.RegisterKvWatchAll({{ .ComponentName }}Watcher)
 	{{ end -}}
+	{{ if .ComponentCronJob -}}
+	cronjob.RegisterCronHandler({{.ComponentName}}CronHandler)
+	{{ end -}}
 }
 
+{{ if .ComponentCronJob -}}
+func {{.ComponentName}}CronHandler() {
+  
+}
+{{ end -}}
 {{ if .ExportNatsKvWit -}}
 func {{.ComponentName}}Watcher(kv *nats.KeyValueEntry) {
   logger.Info("keyvalue watcher", "key", kv.Key, "value", string(kv.Value))

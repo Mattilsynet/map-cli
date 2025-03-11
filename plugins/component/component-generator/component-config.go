@@ -1,14 +1,14 @@
 package component
 
 import (
-	"slices"
 	"strings"
 )
 
 type Config struct {
 	Path, ComponentName, Repository string
 	Capabilities                    []string
-	ComponentNatsCore,              // these booleans should be deducted from Capabilities list above
+	ComponentCronJob,
+	ComponentNatsCore, // these booleans should be deducted from Capabilities list above
 	ComponentNatsJetstream,
 	ComponentNatsKeyValue bool
 
@@ -36,14 +36,6 @@ func NewConfig(path, componentName, repository string, capabilities []string, op
 		opt(&config)
 	}
 	return config
-}
-
-func WithComponentCode() Opt {
-	return func(config *Config) {
-		config.ComponentNatsCore = slices.Contains(config.Capabilities, "nats-core")
-		config.ComponentNatsJetstream = slices.Contains(config.Capabilities, "nats-jetstream")
-		config.ComponentNatsKeyValue = slices.Contains(config.Capabilities, "nats-kv")
-	}
 }
 
 func WithWit() Opt {

@@ -1,0 +1,10 @@
+{{ if or .ComponentCronJob -}}
+package cronjob
+
+import (
+	"{{.Repository}}/gen/mattilsynet/map-cronjob-provider-wc/cron-handler"
+)
+func RegisterCronHandler(fn func()) {
+   cronHandler.Exports.CronHandler = fn
+}
+{{ end -}}
