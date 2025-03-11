@@ -64,9 +64,11 @@ func init() {
 	{{ end -}}
 }
 
+{{ if .ExportNatsKvWit -}}
 func {{.ComponentName}}Watcher(kv *nats.KeyValueEntry) {
   logger.Info("keyvalue watcher", "key", kv.Key, "value", string(kv.Value))
 }
+{{ end -}}
 
 {{ if .ExportNatsJetstreamWit }}
 func {{ .ComponentName }}Consumer(msg *nats.Msg) {

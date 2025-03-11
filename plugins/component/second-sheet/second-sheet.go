@@ -25,6 +25,7 @@ const (
 	natsCore      ProviderName = "nats-core"
 	natsJetstream ProviderName = "nats-jetstream"
 	natsKv        ProviderName = "nats-kv"
+	cronJob       ProviderName = "cron-job"
 )
 
 type Form struct {
@@ -62,6 +63,7 @@ func New() *Form {
 			natsKv,
 			[]*Capability{{"key-value", !selected}, {"watch-all", !selected}},
 		},
+		{cronJob, []*Capability{{"schedule", !selected}}},
 	}
 	form.lenCatalogue = countCapabilities(form.Catalogue)
 	return &form
