@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	
 	"go.wasmcloud.dev/component/log/wasilog"	
-	{{ if or .ComponentNatsJetstream .ComponentNatsCore .ComponentNatsKeyValue}}
+	{{ if or .ComponentNatsJetstream .ComponentNatsCore .ComponentNatsKeyValue .ExportNatsCoreRequestReplyWit -}}
 	"{{ .Repository }}/pkg/nats"
 	{{ end -}}
 	{{ if .ComponentCronJob }}
