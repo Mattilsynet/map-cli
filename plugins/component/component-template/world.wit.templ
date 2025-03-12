@@ -22,4 +22,7 @@ world {{ .WitComponentName -}} {
   {{ if .ExportNatsKvWit -}} 
   export mattilsynet:map-kv/key-value-watcher;
   {{ end -}}
+  {{ if .ComponentCronJob -}}
+  export mattilsynet:cronjob/cronjob; 
+  {{ end -}}
 }

@@ -8,6 +8,9 @@ import (
 	{{ if or .ComponentNatsJetstream .ComponentNatsCore .ComponentNatsKeyValue}}
 	"{{ .Repository }}/pkg/nats"
 	{{ end -}}
+	{{ if .ComponentCronJob }}
+	"{{ .Repository }}/pkg/cronjob"
+	{{ end -}}
 )
 var (
 	logger *slog.Logger
@@ -71,7 +74,7 @@ func init() {
 
 {{ if .ComponentCronJob -}}
 func {{.ComponentName}}CronHandler() {
-  
+    logger.Info("Cronjob handler called")
 }
 {{ end -}}
 {{ if .ExportNatsKvWit -}}

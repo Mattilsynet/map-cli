@@ -136,4 +136,24 @@ spec:
                   url: "nats://localhost:4222"
                   #startup_time is in seconds, and it's how many seconds before the provider starts, the downside of this is that you have to make a qualified guess or else this might not work. Wasmcloud doesn't supply us with a component health check which the provider can wait for yet
                   startup_time: "5"
-{{ end }}
+{{ end -}}
+{{ if .ComponentCronJob -}}
+# Cronjob provider, look in component how it's used
+    - name: cronjob
+      type: capability
+      properties:
+        image: ghrc.io/mattilsynet/map-cronjob-provider-wc:v0.0.4
+        id: cronjob
+      traits:
+        - type: link
+          properties:
+            target: {{ .ComponentName }}
+            namespace: mattilsynet
+            package: test
+            interfaces: [cron-handler]
+            target_config:
+              - name: log-component-cron-expression
+                properties:
+                  expression: "@every 2s"
+ 
+{{ end -}}

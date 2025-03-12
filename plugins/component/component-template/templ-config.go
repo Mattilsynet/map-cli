@@ -41,6 +41,9 @@ var depsTomlTempl string
 //go:embed github.workflows.yml.templ
 var githubWorkflowsYmlTempl string
 
+//go:embed pkgcronjob.go.templ
+var pkgCronJobTempl string
+
 const (
 	ComponentGoPath   = "component.go"
 	LocalWadmYamlPath = "local.wadm.yaml"
@@ -58,6 +61,7 @@ var Templs = map[string]string{
 	"pkg/nats/nats.go":                 pkgNatsGoTempl,
 	"pkg/nats/kv.go":                   pkgNatsKvTempl,
 	"pkg/nats/js.go":                   pkgNatsJsTempl,
+	"pkg/cronjob/cronjob.go":           pkgCronJobTempl,
 	"wit/deps.toml":                    depsTomlTempl,
 	".github/workflows/build_push.yml": githubWorkflowsYmlTempl,
 }
