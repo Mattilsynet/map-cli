@@ -1,0 +1,18 @@
+{
+  "type": {
+    "kind": "ManagedGcpEnvironment",
+    "api_version": "v1"
+  },
+  "metadata": {
+    "name": "example-gcp-environment"
+  },
+  "spec": {
+    "group": "group",
+    "parent_folder_id": "123123",
+    "dns_zone_name": "example.com",
+    "team_ar_repo_id": "team-repo-id",
+    "mapspace_ref": "mapspace-ref",
+    "budget_amount": "1000",
+    "email": "example@gmail.com"
+  }
+}
