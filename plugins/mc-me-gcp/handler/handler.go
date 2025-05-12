@@ -11,7 +11,7 @@ import (
 
 	"github.com/Mattilsynet/map-cli/internal/config"
 	"github.com/Mattilsynet/mapis/gen/go/command/v1"
-	managedenvironment_v1 "github.com/Mattilsynet/mapis/gen/go/managedenvironment/v1"
+	me_gcp "github.com/Mattilsynet/mapis/gen/go/managedgcpenvironment/v1"
 	metav1 "github.com/Mattilsynet/mapis/gen/go/meta/v1"
 	"github.com/Mattilsynet/mapis/gen/go/query/v1"
 	"github.com/google/uuid"
@@ -47,7 +47,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			if err := proto.Unmarshal(msg.Data, &qry); err == nil {
 				bdy := qry.Status.TypePayload
 				for _, bytes := range bdy {
-					me := managedenvironment_v1.ManagedEnvironment{}
+					me := me_gcp.ManagedGcpEnvironment{}
 					proto.Unmarshal(bytes, &me)
 					bytes, err := json.MarshalIndent(&me, "", " ")
 					if err != nil {
@@ -80,10 +80,10 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 				Kind:       "Query",
 				ApiVersion: "v1",
 			},
-			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironment", ResourceVersion: uuid.NewString()},
+			Metadata: &metav1.ObjectMeta{Name: "ManagedEnvironmentGcp", ResourceVersion: uuid.NewString()},
 			Spec: &query.QuerySpec{
 				Action:  "get",
-				Type:    &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
+				Type:    &metav1.TypeMeta{Kind: "ManagedEnvironmentGcp", ApiVersion: "v1"},
 				Session: config.CurrentConfig.Nats.Session,
 				QueryFilter: &query.QueryFilter{
 					Name: name,
@@ -107,7 +107,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			return fmt.Errorf("failed to read file '%s': %w", filePath, err)
 		}
 
-		var message *managedenvironment_v1.ManagedEnvironment
+		var message *me_gcp.ManagedGcpEnvironment
 		format := getFileFormat(filePath)
 		switch format {
 		case "json":
@@ -118,7 +118,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			return fmt.Errorf("unsupported file format for file '%s'", filePath)
 		}
 		if err != nil {
-			meEmpty := &managedenvironment_v1.ManagedEnvironment{Type: &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"}, Metadata: &metav1.ObjectMeta{Name: "map-dev", ResourceVersion: uuid.NewString()}, Spec: &managedenvironment_v1.ManagedEnvironmentSpec{}}
+			meEmpty := &me_gcp.ManagedGcpEnvironment{Type: &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"}, Metadata: &metav1.ObjectMeta{Name: "map-dev", ResourceVersion: uuid.NewString()}, Spec: &me_gcp.ManagedGcpEnvironmentSpec{}}
 			meBytes, jsonMarshalIdentErr := json.MarshalIndent(meEmpty, "", " ")
 			if jsonMarshalIdentErr != nil {
 				return jsonMarshalIdentErr
@@ -198,8 +198,8 @@ func getFileFormat(filePath string) string {
 	}
 }
 
-func unmarshalJSONToProto(data []byte) (*managedenvironment_v1.ManagedEnvironment, error) {
-	message := &managedenvironment_v1.ManagedEnvironment{}
+func unmarshalJSONToProto(data []byte) (*me_gcp.ManagedGcpEnvironment, error) {
+	message := &me_gcp.ManagedGcpEnvironment{}
 	unmarshalOptions := protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
@@ -210,8 +210,8 @@ func unmarshalJSONToProto(data []byte) (*managedenvironment_v1.ManagedEnvironmen
 	return message, nil
 }
 
-func unmarshalYAMLToProto(data []byte) (*managedenvironment_v1.ManagedEnvironment, error) {
-	var yamlMap map[string]interface{}
+func unmarshalYAMLToProto(data []byte) (*me_gcp.ManagedGcpEnvironment, error) {
+	var yamlMap map[string]any
 	err := yaml.Unmarshal(data, &yamlMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)

@@ -30,11 +30,11 @@ func main() {
 	rootCmd.Flags().StringVarP(&mcConfigFile, "config", "c", MC_CONFIG_NAME, "file to read configuration from")
 
 	rootCmd.AddCommand(&cobra.Command{
-		Use:     "managed-environment",
-		Short:   "Managed Environment (me)",
+		Use:     "managed-environment-gcp",
+		Short:   "Managed Environment (me-gcp)",
 		Aliases: []string{"me"},
 		Run: func(cmd *cobra.Command, args []string) {
-			err := execPlugin("mc-me", args...)
+			err := execPlugin("mc-me-gcp", args...)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to execute plugin: %v\n", err)
 				os.Exit(1)
@@ -60,6 +60,18 @@ func main() {
 		Aliases: []string{"c"},
 		Run: func(cmd *cobra.Command, args []string) {
 			err := execPlugin("mc-component", args...)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to execute plugin: %v\n", err)
+				os.Exit(1)
+			}
+		},
+	})
+	rootCmd.AddCommand(&cobra.Command{
+		Use:     "provider",
+		Short:   "Provider plugin",
+		Aliases: []string{"p"},
+		Run: func(cmd *cobra.Command, args []string) {
+			err := execPlugin("mc-provider", args...)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to execute plugin: %v\n", err)
 				os.Exit(1)

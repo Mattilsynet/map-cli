@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
-	"github.com/Mattilsynet/map-cli/plugins/mc-me/handler"
+	"github.com/Mattilsynet/map-cli/plugins/mc-me-gcp/handler"
 	"github.com/spf13/cobra"
 )
 
@@ -20,12 +20,12 @@ func main() {
 	handler := handler.New(nc)
 	rootCmd := &cobra.Command{
 		Use:     "me",
-		Short:   "Managed Environment (me) plugin",
+		Short:   "Managed Environment for gcp (me-gcp) plugin",
 		Aliases: []string{"me"},
 	}
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "apply",
-		Short: "Create or update a managed-environment",
+		Short: "Create or update a managed-environment in gcp",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := handler.HandleCobraCommand(cmd, args)
 			if err != nil {
@@ -36,7 +36,7 @@ func main() {
 	})
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "delete",
-		Short: "Delete a managed-environment",
+		Short: "Delete a managed-environment in gcp",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := handler.HandleCobraCommand(cmd, args)
 			if err != nil {
@@ -47,7 +47,7 @@ func main() {
 	})
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "get",
-		Short: "Get a managed-environment",
+		Short: "Get a managed-environment in gcp",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := handler.HandleCobraCommand(cmd, args)
 			if err != nil {

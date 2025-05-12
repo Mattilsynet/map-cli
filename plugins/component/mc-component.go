@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -32,10 +31,6 @@ func main() {
 				os.Exit(1)
 			}
 			if model := m.(*prompt.Model); model.Finished {
-				p, _ := json.Marshal(model.ResultConfig())
-				fmt.Println(string(p))
-				//	os.Exit(1)
-
 				generateModel, err := component.NewModel(model.ResultConfig())
 				if err != nil {
 					fmt.Println("error intiation, file-generation:", err)
