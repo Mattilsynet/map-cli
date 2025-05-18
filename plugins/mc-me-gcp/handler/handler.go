@@ -118,7 +118,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			return fmt.Errorf("unsupported file format for file '%s'", filePath)
 		}
 		if err != nil {
-			meEmpty := &me_gcp.ManagedGcpEnvironment{Type: &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"}, Metadata: &metav1.ObjectMeta{Name: "map-dev", ResourceVersion: uuid.NewString()}, Spec: &me_gcp.ManagedGcpEnvironmentSpec{}}
+			meEmpty := &me_gcp.ManagedGcpEnvironment{Type: &metav1.TypeMeta{Kind: "ManagedEnvironmentGcp", ApiVersion: "v1"}, Metadata: &metav1.ObjectMeta{Name: "map-dev", ResourceVersion: uuid.NewString()}, Spec: &me_gcp.ManagedGcpEnvironmentSpec{}}
 			meBytes, jsonMarshalIdentErr := json.MarshalIndent(meEmpty, "", " ")
 			if jsonMarshalIdentErr != nil {
 				return jsonMarshalIdentErr
@@ -141,7 +141,7 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 			Metadata: &metav1.ObjectMeta{Name: "Command", ResourceVersion: uuid.NewString()},
 			Spec: &command.CommandSpec{
 				Operation:   cmd.Use,
-				Type:        &metav1.TypeMeta{Kind: "ManagedEnvironment", ApiVersion: "v1"},
+				Type:        &metav1.TypeMeta{Kind: "ManagedEnvironmentGcp", ApiVersion: "v1"},
 				TypePayload: bytes,
 				SessionId:   sessionId,
 			},
