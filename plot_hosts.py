@@ -1,3 +1,6 @@
+#INFO: use command underneath:
+#nats kv get wadm_state host_default --raw | python3 plot_hosts.py | graph-easy --from=dot
+
 #!/usr/bin/env python3
 import sys, json
 from graphviz import Digraph
