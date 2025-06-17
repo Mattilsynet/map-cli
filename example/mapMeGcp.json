@@ -4,15 +4,16 @@
     "api_version": "v1"
   },
   "metadata": {
-    "name": "example-gcp-environment"
+    "name": "atle-pwn-70"
   },
   "spec": {
     "group": "group",
-    "parent_folder_id": "123123",
-    "dns_zone_name": "example.com",
-    "team_ar_repo_id": "team-repo-id",
-    "mapspace_ref": "mapspace-ref",
-    "budget_amount": "1000",
-    "email": "example@gmail.com"
+    "parent_folder_id": "476099847242",
+    "dns_zone_name": "superasda",
+    "team_ar_repo_id": "map",
+    "mapspace_ref": "pwn",
+    "budget_amount": "1337",
+    "email": "1337@mattilsynet.no",
+    "env": "dev"
   }
 }
