@@ -4,11 +4,11 @@
     "api_version": "v1"
   },
   "metadata": {
-    "name": "example-gcp-environment"
+    "name": "marius-1337"
   },
   "spec": {
     "group": "group",
-    "parent_folder_id": "123123",
+    "parent_folder_id": "1337",
     "dns_zone_name": "example.com",
     "team_ar_repo_id": "team-repo-id",
     "mapspace_ref": "mapspace-ref",
