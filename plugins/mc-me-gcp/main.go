@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Mattilsynet/map-cli/internal/config"
 	"github.com/Mattilsynet/map-cli/plugins/mc-me-gcp/handler"
@@ -55,7 +54,6 @@ func main() {
 			}
 		},
 	})
-	time.Sleep(2000)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

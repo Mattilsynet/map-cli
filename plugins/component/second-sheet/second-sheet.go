@@ -22,10 +22,11 @@ var (
 const (
 	selected bool = true
 
-	natsCore      ProviderName = "nats-core"
-	natsJetstream ProviderName = "nats-jetstream"
-	natsKv        ProviderName = "nats-kv"
-	cronJob       ProviderName = "cron-job"
+	natsCore         ProviderName = "nats-core"
+	natsJetstream    ProviderName = "nats-jetstream"
+	natsKv           ProviderName = "nats-kv"
+	cronJob          ProviderName = "cron-job"
+	meGcpCloudrunJob ProviderName = "me-gcp-cloudrunjob"
 )
 
 type Form struct {
@@ -64,6 +65,7 @@ func New() *Form {
 			[]*Capability{{"key-value", !selected}, {"watch-all", !selected}},
 		},
 		{cronJob, []*Capability{{"cron-handler", !selected}}},
+		{meGcpCloudrunJob, []*Capability{{"me-gcp-cloudrun-job-admin", !selected}}},
 	}
 	form.lenCatalogue = countCapabilities(form.Catalogue)
 	return &form

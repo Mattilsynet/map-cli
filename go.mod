@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.5
 
 require (
-	github.com/Mattilsynet/mapis v0.0.10
+	github.com/Mattilsynet/mapis v0.0.11
 	github.com/alecthomas/chroma v0.10.0
 	github.com/charmbracelet/bubbles v0.20.1-0.20250213142908-7a6b190840c8
 	github.com/charmbracelet/bubbletea v1.3.3
@@ -16,7 +16,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 

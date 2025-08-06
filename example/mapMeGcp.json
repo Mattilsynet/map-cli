@@ -4,16 +4,17 @@
     "api_version": "v1"
   },
   "metadata": {
-    "name": "atle-pwn-70"
+    "name": "cli-dev-test-edb-1",
+    "resource_version": "pwn pwn3"
   },
   "spec": {
-    "group": "group",
+    "group": "gcp.plattform@mattilsynet.no",
     "parent_folder_id": "476099847242",
-    "dns_zone_name": "superasda",
+    "dns_zone_name": "bepif",
     "team_ar_repo_id": "map",
     "mapspace_ref": "pwn",
     "budget_amount": "1337",
-    "email": "1337@mattilsynet.no",
+    "email": "plattform-budget-and-aaaaid5rqtwapa2kmig6c27bsm@mattilsynet-hq.slack.com",
     "env": "dev"
   }
 }

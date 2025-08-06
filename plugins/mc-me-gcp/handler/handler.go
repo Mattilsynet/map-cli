@@ -53,10 +53,10 @@ func (ma *ManagedEnvironmentHandler) HandleCobraCommand(cmd *cobra.Command, args
 					if err != nil {
 						fmt.Println("Error marshalling json")
 					}
-					fmt.Println(string(bytes))
+					fmt.Println("ind", string(bytes))
 				}
 			} else {
-				fmt.Println(string(msg.Data))
+				fmt.Println("total ", string(msg.Data))
 			}
 		})
 		if subErr != nil {
