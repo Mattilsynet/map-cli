@@ -44,24 +44,42 @@ var githubWorkflowsYmlTempl string
 //go:embed pkgcronjob.go.templ
 var pkgCronJobTempl string
 
+//go:embed pkgcloudrunjob-admin-provider.map-me-gcp-cloudrunjob.go.templ
+var pkgCloudrunjobAdminProviderMapMeGcpCloudrunJobTempl string
+
+//go:embed pkgmanaged-environment.managed-environment.go.templ
+var pkgManagedEnvironmentManagedEnvironmentTempl string
+
+//go:embed pkgmanifest.manifest.go.templ
+var pkgManifestManifestGoTempl string
+
 const (
 	ComponentGoPath   = "component.go"
 	LocalWadmYamlPath = "local.wadm.yaml"
+	GoModPath         = "go.mod"
+	WadmYamlPath      = "wadm.yaml"
+	ReadmeMdPath      = "README.md"
 )
 
 var Templs = map[string]string{
-	"go.mod":                           goModtempl,
+	GoModPath:                          goModtempl,
 	ComponentGoPath:                    componentGotempl,
-	"wadm.yaml":                        wadmYamltempl,
+	WadmYamlPath:                       wadmYamltempl,
 	LocalWadmYamlPath:                  localWadmYamltempl,
+	ReadmeMdPath:                       readmeMdtempl,
+	".github/workflows/build_push.yml": githubWorkflowsYmlTempl,
 	"tools.go":                         toolsGotempl,
 	"wasmcloud.toml":                   wasmcloudTomltempl,
-	"README.md":                        readmeMdtempl,
-	"wit/world.wit":                    worldWittempl,
-	"pkg/nats/nats.go":                 pkgNatsGoTempl,
-	"pkg/nats/kv.go":                   pkgNatsKvTempl,
-	"pkg/nats/js.go":                   pkgNatsJsTempl,
-	"pkg/cronjob/cronjob.go":           pkgCronJobTempl,
 	"wit/deps.toml":                    depsTomlTempl,
-	".github/workflows/build_push.yml": githubWorkflowsYmlTempl,
+	"wit/world.wit":                    worldWittempl,
+	// nats
+	"pkg/nats/nats.go": pkgNatsGoTempl,
+	"pkg/nats/kv.go":   pkgNatsKvTempl,
+	"pkg/nats/js.go":   pkgNatsJsTempl,
+	// cronjob
+	"pkg/cronjob/cronjob.go": pkgCronJobTempl,
+	// cloudrunjob-admin
+	"pkg/cloudrunjob-admin-provider/map-me-gcp-cloudrunjob.go": pkgCloudrunjobAdminProviderMapMeGcpCloudrunJobTempl,
+	"pkg/managed-environment/managed-environment.go":           pkgManagedEnvironmentManagedEnvironmentTempl,
+	"pkg/manifest/manifest.go":                                 pkgManifestManifestGoTempl,
 }

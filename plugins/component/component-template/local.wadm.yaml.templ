@@ -86,7 +86,34 @@ spec:
             namespace: mattilsynet
             package: provider-jetstream-nats
             interfaces: [jetstream-publish]
-{{ end }}
+{{ end -}}
+{{ if .ComponentCloudrunAdmin -}}
+# linking such that we get cloudrunjob admin capabilities, this is used to deploy cloudrun jobs
+        - type: link
+          properties:
+            target:
+              name: map-me-gcp-cloudrunjob-provider
+              config:
+                - name: map-me-gcp-cloudrunjob-provider-config
+                  properties:
+                    project_id: "map-ops-dev-c2c8"
+                    image: "us-docker.pkg.dev/cloudrun/container/job:latest"
+                    location: "europe-north1"
+                    # underneath content you get from logging in with gcloud auth login and finding the token on your computer on linux it's /home/$USER/.config/gcloud/application_default_credentials.json
+                    map-me-gcp-cloudrunjob-sa: |
+                      {
+                        "account": "",
+                        "client_id": "abc.apps.googleusercontent.com",
+                        "client_secret": "abc-abc-123",
+                        "quota_project_id": "map-ops-dev-c2c8",
+                        "refresh_token": "1//some-stuff-8",
+                        "type": "authorized_user",
+                        "universe_domain": "googleapis.com"
+                      }
+            namespace: mattilsynet
+            package: me-gcp-cloudrun-job-admin
+            interfaces: [me-gcp-cloudrun-job-admin]
+{{ end -}}
 {{ if or .ImportNatsJetstreamWit .ExportNatsJetstreamWit -}}
 # Nats Jetstream provider, provides consumer/publish possibilities, look in source config underneath
     - name: nats-jetstream
@@ -156,4 +183,14 @@ spec:
                 properties:
                   expression: "@every 2s"
  
+{{ end -}}
+{{ if .ComponentCloudrunAdmin -}}
+    - name: map-me-gcp-cloudrunjob-provider
+      type: capability
+      properties:
+        image: ghcr.io/Mattilsynet/map-me-gcp-cloudrunjob:v0.0.2.3 
+      traits:
+        - type: spreadscaler
+          properties:
+            replicas: 1
 {{ end -}}

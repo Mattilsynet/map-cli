@@ -25,4 +25,8 @@ world {{ .WitComponentName -}} {
   {{ if .ComponentCronJob -}}
   export mattilsynet:cronjob/cronjob; 
   {{ end -}}
+  {{ if .ComponentCloudrunAdmin -}}
+  import mattilsynet:me-gcp-cloudrun-job-admin/me-gcp-cloudrun-job-admin@0.1.0;
+  {{ end -}}
 }
+

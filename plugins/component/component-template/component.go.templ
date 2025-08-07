@@ -11,6 +11,9 @@ import (
 	{{ if .ComponentCronJob }}
 	"{{ .Repository }}/pkg/cronjob"
 	{{ end -}}
+	{{ if .ComponentCloudrunAdmin }}
+	cloudrunjobadmin "{{ .Repository }}/pkg/cloudrunjob-admin"
+	{{ end -}}
 )
 var (
 	logger *slog.Logger
@@ -34,6 +37,13 @@ func init() {
 	{{ end -}}
 	{{ if .ExportNatsCoreWit -}}
         conn.RegisterSubscription({{ .ComponentName }}Subscriber)
+	{{ end -}}
+	{{ if .ComponentCloudrunAdmin -}}
+	//check out /pkg/manifest and /pkg/managed-environment for how to go from a mapis managed-gcp-environment to the wit
+	// typical workflow:
+	// 1. me := managedenvironment.ToManagedEnvironment(someBytes)
+	// 2. witMe := manifest.ToWitManifest(me)
+	//getWitManifest, err := cloudrunjobadmin.Get(witMe)
 	{{ end -}}
 	{{ if .ImportNatsCoreWit -}}
 	//nats-core publish

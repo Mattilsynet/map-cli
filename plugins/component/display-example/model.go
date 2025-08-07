@@ -1,3 +1,6 @@
+/*
+this is for rendering the example code on the right side when selecting something from second view
+*/
 package display_example
 
 import (

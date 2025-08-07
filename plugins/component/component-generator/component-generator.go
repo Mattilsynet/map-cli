@@ -61,6 +61,7 @@ func setBools(config *Config) {
 	config.ComponentNatsJetstream = config.ImportNatsJetstreamWit || config.ExportNatsJetstreamWit
 	config.ComponentNatsKeyValue = config.ImportNatsKvWit || config.ExportNatsKvWit
 	config.ComponentCronJob = slices.Contains(config.Capabilities, "cron-job:cron-handler")
+	config.ComponentCloudrunAdmin = slices.Contains(config.Capabilities, "me-gcp-cloudrunjob:me-gcp-cloudrun-job-admin")
 }
 
 func GenerateAndInstall(projectRootPath, path, content string) error {

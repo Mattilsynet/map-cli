@@ -7,12 +7,14 @@ import (
 type Config struct {
 	Path, ComponentName, Repository string
 	Capabilities                    []string
+
 	ComponentCronJob,
+	ComponentCloudrunAdmin,
 	ComponentNatsCore, // these booleans should be deducted from Capabilities list above
 	ComponentNatsJetstream,
 	ComponentNatsKeyValue bool
 
-	WitPackage       string // can be deducted from Repository
+	WitPackage, // can be deducted from Repository
 	WitComponentName string // kebab-case wit requirement
 	ImportNatsCoreWit,
 	ExportNatsCoreWit,

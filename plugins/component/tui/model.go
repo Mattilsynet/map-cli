@@ -1,3 +1,7 @@
+/*
+INFO:
+This is the outer view and how it's styled
+*/
 package prompt
 
 import (
