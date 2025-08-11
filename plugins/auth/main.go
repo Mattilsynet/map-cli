@@ -11,6 +11,7 @@ import (
 
 	"github.com/Mattilsynet/map-cli/internal/config"
 	_ "github.com/Mattilsynet/map-cli/internal/logger"
+	"github.com/Mattilsynet/map-cli/plugins/auth/zitadel"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,11 +23,18 @@ var rootCmd = &cobra.Command{
 	Aliases: []string{"a", "auth"},
 }
 
+// DEPRECATED: use zitadel
 var natsCmd = &cobra.Command{
 	Use:   "nats",
 	Short: "Authenticate through nats context",
 }
 
+var zitadelCmd = &cobra.Command{
+	Use:   "zitadel",
+	Short: "Authenticate through ZITADEL with device code flow",
+}
+
+// DEPRECATED: use zitadel
 var natsCmdLogin = &cobra.Command{
 	Use:   "login",
 	Short: "Choose nats context, i.e., `nats context select`",
@@ -35,9 +43,19 @@ var natsCmdLogin = &cobra.Command{
 	},
 }
 
+var zitadelCmdLogin = &cobra.Command{
+	Use:   "login",
+	Short: "Login with device code flow",
+	Run: func(cmd *cobra.Command, args []string) {
+		zitadel.DeviceLogin()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(natsCmd)
 	natsCmd.AddCommand(natsCmdLogin)
+	rootCmd.AddCommand(zitadelCmd)
+	zitadelCmd.AddCommand(zitadelCmdLogin)
 }
 
 func main() {
@@ -48,6 +66,7 @@ func main() {
 	}
 }
 
+// DEPRECATED: use zitadel
 func natsContextSelect() {
 	// TODO: execplugin, nats context select and execContextSelect isnt needed as nats context select returns the info we need, so we should do both in same operation for efficiency
 	err := execPlugin("nats", "context", "select")
@@ -63,6 +82,7 @@ func natsContextSelect() {
 	execLogin(path)
 }
 
+// DEPRECATED: use zitadel
 func execLogin(path string) error {
 	// Read the existing config file
 	err := viper.ReadInConfig()
@@ -89,6 +109,7 @@ func execLogin(path string) error {
 	return nil
 }
 
+// DEPRECATED: use zitadel
 func execContextSelect() (string, error) {
 	path, err := exec.LookPath("nats")
 	if err != nil {
@@ -107,6 +128,7 @@ func execContextSelect() (string, error) {
 	return path, nil
 }
 
+// DEPRECATED: use zitadel
 func extractField(output, regex string) string {
 	re := regexp.MustCompile(regex)
 	match := re.FindStringSubmatch(output)
@@ -116,6 +138,7 @@ func extractField(output, regex string) string {
 	return ""
 }
 
+// DEPRECATED: use zitadel
 func execPlugin(pluginName string, args ...string) error {
 	path, err := exec.LookPath(pluginName)
 	if err != nil {
