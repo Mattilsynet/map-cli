@@ -15,8 +15,11 @@ import (
 
 	"golang.org/x/exp/slog"
 
+	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth"
+	"github.com/zitadel/zitadel-go/v3/pkg/client"
+	//"github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/management"
 	"github.com/zitadel/zitadel-go/v3/pkg/http/middleware"
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
@@ -49,13 +52,27 @@ func main() {
 
 	// Initiate the authorization by providing a zitadel configuration and a verifier.
 	// This example will use OAuth2 Introspection for this, therefore you will also need to provide the downloaded api key.json
-	authZ, err := authorization.New(ctx, zitadel.New(*domain, zitadel.WithInsecure("8080")), oauth.DefaultAuthorization(*key))
+	zit := zitadel.New(*domain, zitadel.WithInsecure("8080"))
+	authZ, err := authorization.New(ctx, zit, oauth.DefaultAuthorization(*key))
 	if err != nil {
 		slog.Error("zitadel sdk could not initialize", "error", err)
 		os.Exit(1)
 	}
-
-	// Initialize the HTTP middleware by providing the authorization
+	authOption := client.DefaultServiceUserAuthentication(
+		*key,
+		oidc.ScopeOpenID,
+		client.ScopeZitadelAPI(),
+	)
+	// api is used to check what this service-account-user is part of etc, e.g., api.ManagementService().GetMyOrg(ctx, &managedmenet.GetMyOrgRequest{})
+	api, err := client.New(ctx, zit, client.WithAuth(authOption))
+	_ = api
+	_ = err
+	// resp, err := api.ManagementService().GetMyOrg(ctx, &management.GetMyOrgRequest{})
+	// // Initialize the HTTP middleware by providing the authorization
+	// if err != nil {
+	// 	slog.Error("zitadel sdk could not get service account", "error", err)
+	// }
+	// slog.Info("service account", "org", resp.Org)
 	mw := middleware.New(authZ)
 
 	router := http.NewServeMux()
