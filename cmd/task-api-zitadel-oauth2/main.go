@@ -73,6 +73,16 @@ func main() {
 	// 	slog.Error("zitadel sdk could not get service account", "error", err)
 	// }
 	// slog.Info("service account", "org", resp.Org)
+	a, errr := authZ.CheckAuthorization(ctx, "abc")
+	if errr != nil {
+		// unauthorized
+		return
+	}
+	authorized := a.IsGrantedRole("map-cli.write")
+	// authorized := a.IsGrantedRoleInOrganization("map-cli.write", "map")
+	if !authorized {
+		// not allowed to write.... could be command or whatever
+	}
 	mw := middleware.New(authZ)
 
 	router := http.NewServeMux()
