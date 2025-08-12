@@ -5,48 +5,147 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"flag"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"strings"
 
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	"github.com/zitadel/oidc/v3/pkg/oidcclient"
-	"github.com/zitadel/oidc/v3/pkg/oidcclient/httphelper"
+	"golang.org/x/exp/slog"
+
+	"github.com/zitadel/zitadel-go/v3/pkg/authorization"
+	"github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth"
+	"github.com/zitadel/zitadel-go/v3/pkg/http/middleware"
+	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
 
+var (
+	// flags to be provided for running the example server
+	domain = flag.String("domain", "", "your ZITADEL instance domain (only works with localhost, since we set insecure flag to zitadel.New)")
+	key    = flag.String("key", "", "path to your key.json")
+	port   = flag.String("port", "8089", "port to run the server on (default is 8089)")
+
+	// tasks are used to store an in-memory list used in the protected endpoint
+	tasks []string
+)
+
+/*
+ This example demonstrates how to secure an HTTP API with ZITADEL using the provided authorization (AuthZ) middleware.
+
+ It will serve the following 3 different endpoints:
+ (These are meant to demonstrate the possibilities and do not follow REST best practices):
+
+ - /api/healthz (can be called by anyone)
+ - /api/tasks (requires authorization)
+ - /api/add-task (requires authorization with granted `admin` role)
+*/
+
 func main() {
+	flag.Parse()
+
 	ctx := context.Background()
 
-	issuer := "http://localhost:8080" // Local Zitadel
-	provider, err := oidc.NewProvider(ctx, issuer)
+	// Initiate the authorization by providing a zitadel configuration and a verifier.
+	// This example will use OAuth2 Introspection for this, therefore you will also need to provide the downloaded api key.json
+	authZ, err := authorization.New(ctx, zitadel.New(*domain, zitadel.WithInsecure("8080")), oauth.DefaultAuthorization(*key))
 	if err != nil {
-		log.Fatalf("failed to get provider: %v", err)
+		slog.Error("zitadel sdk could not initialize", "error", err)
+		os.Exit(1)
 	}
 
-	keySet := oidc.NewRemoteKeySet(ctx, provider.Endpoint().JWKSURL)
+	// Initialize the HTTP middleware by providing the authorization
+	mw := middleware.New(authZ)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "missing bearer token", http.StatusUnauthorized)
-			return
-		}
-		rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+	router := http.NewServeMux()
 
-		// Parse and validate token
-		idToken, err := oidc.ParseToken(rawToken, keySet)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("invalid token: %v", err), http.StatusUnauthorized)
-			return
-		}
-		fmt.Println(idToken)
-		// Optional: Validate claims (audience, issuer)
+	// This endpoint is accessible by anyone and will always return "200 OK" to indicate the API is running
+	router.Handle("/api/healthz", http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			err = jsonResponse(w, "OK", http.StatusOK)
+			if err != nil {
+				slog.Error("error writing response", "error", err)
+			}
+		}))
 
-		// If we get here, token is valid
-		fmt.Fprintln(w, "hello world")
-	})
+	// This endpoint is only accessible with a valid authorization (in this case a valid access_token / PAT).
+	// It will list all stored tasks. In case the user is granted the `admin` role it will add a separate task telling him
+	// to add a new task.
+	router.Handle("/api/tasks", mw.RequireAuthorization()(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			// Using the [middleware.Context] function we can gather information about the authorized user.
+			// This example will just print the users ID using the provided method, and it will also
+			// print the username by directly access the field of the typed [*oauth.IntrospectionContext].
+			authCtx := mw.Context(r.Context())
+			slog.Info("user accessed task list", "id", authCtx.UserID(), "username", authCtx.Username)
 
-	fmt.Println("Server running at http://localhost:3000")
-	http.ListenAndServe(":3000", nil)
+			// Although this endpoint is accessible by any authorized user, you might want to take additional steps
+			// if the user is granted a specific role. In this case an `admin` will be informed to add a new task:
+			list := tasks
+			slog.Info("user has roles", "roles", authCtx.Scope)
+			if authCtx.IsGrantedRole("map-cli.write") {
+				list = append(list, "create a new task on /api/add-task")
+			}
+
+			// return the existing task list
+			err = jsonResponse(w, &taskList{Tasks: list}, http.StatusOK)
+			if err != nil {
+				slog.Error("error writing response", "error", err)
+			}
+		})))
+
+	// This endpoint is only accessible with a valid authorization, which was granted the `admin` role (in any organization).
+	// It will add the provided task to the list of existing ones.
+	router.Handle("/api/add-task", mw.RequireAuthorization(authorization.WithRole(`admin`))(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			// get the provided task and do not accept an empty value
+			task := strings.TrimSpace(r.FormValue("task"))
+			if task == "" {
+				err = jsonResponse(w, "task must not be empty", http.StatusBadRequest)
+				if err != nil {
+					slog.Error("error writing invalid task response", "error", err)
+					return
+				}
+				return
+			}
+
+			// since it was not empty, let's add it to the existing list
+			tasks = append(tasks, task)
+
+			// since we only want the authorized userID and don't need any specific data, we can simply use [authorization.UserID]
+			slog.Info("admin added task", "id", authorization.UserID(r.Context()), "task", task)
+
+			// inform the admin about the successful addition
+			err = jsonResponse(w, fmt.Sprintf("task `%s` added", task), http.StatusOK)
+			if err != nil {
+				slog.Error("error writing task added response", "error", err)
+				return
+			}
+		})))
+
+	// start the server on the specified port (default http://localhost:8089)
+	lis := fmt.Sprintf(":%s", *port)
+	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)
+	err = http.ListenAndServe(lis, router)
+	if !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("server terminated", "error", err)
+		os.Exit(1)
+	}
+}
+
+// jsonResponse is a simple helper function to return a proper JSON response
+func jsonResponse(w http.ResponseWriter, resp any, status int) error {
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(status)
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(data)
+	return err
+}
+
+type taskList struct {
+	Tasks []string `json:"tasks,omitempty"`
 }
