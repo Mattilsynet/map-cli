@@ -1,6 +1,6 @@
 // INFO: This is a standalone test server. It's ment to be used in conjunction with mc auth zitadel login to validate and test out the token and test the authorization zitadel server on localhost:8080
-// INFO: Read more on device code flow: https://zitadel.com/docs/guides/integrate/login/oidc/device-authorization
 // INFO: And on how to setup your local zitadel server:https://zitadel.com/docs/self-hosting/deploy/compose
+// INFO: Guide used for the code below: https://zitadel.com/docs/examples/secure-api/go
 package main
 
 import (
