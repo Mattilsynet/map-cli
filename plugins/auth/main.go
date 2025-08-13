@@ -47,7 +47,10 @@ var zitadelCmdLogin = &cobra.Command{
 	Use:   "login",
 	Short: "Login with device code flow",
 	Run: func(cmd *cobra.Command, args []string) {
-		zitadel.DeviceLogin()
+		if err := zitadel.DeviceLogin(); err != nil {
+			slog.Error("error logging into zitadel %v", err)
+			os.Exit(1)
+		}
 	},
 }
 

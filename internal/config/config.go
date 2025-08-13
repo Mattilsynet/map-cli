@@ -15,6 +15,10 @@ import (
 
 var CurrentConfig *Config
 
+func init() {
+	CurrentConfig = loadConfigIntoViper()
+}
+
 var CmdConfig = &cobra.Command{
 	Use:   "config",
 	Short: "Config",
@@ -27,8 +31,16 @@ type Nats struct {
 	Session            string `mapstructure:"session"`
 	nc                 *nats.Conn
 }
+
+type Zitadel struct {
+	BearerToken string `mapstructure:"token"`
+	IdToken     string `mapstructure:"idtoken"`
+	ExpiresAt   uint64 `mapstructure:"expiresAt"`
+}
+
 type Config struct {
 	Nats          Nats
+	Zitadel       Zitadel
 	Authenticated bool
 	AzureTenantID string
 	AzureClientID string
@@ -36,9 +48,8 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		Nats: Nats{
-			CredentialFilePath: ".", Session: "",
-		},
+		Nats:          Nats{CredentialFilePath: ".", Session: ""},
+		Zitadel:       Zitadel{BearerToken: "", IdToken: ""},
 		Authenticated: false,
 	}
 }
@@ -99,10 +110,6 @@ func extractNatsContext(credentialsFilePath string) (url string, natsCredentials
 	return config.URL, config.Creds, nil
 }
 
-func init() {
-	CurrentConfig = loadConfigIntoViper()
-}
-
 func IsAuthenticated() bool {
 	return CurrentConfig.Authenticated
 }
@@ -136,6 +143,9 @@ func loadConfigIntoViper() *Config {
 		config := DefaultConfig()
 		viper.Set("Nats.CredentialFilePath", config.Nats.CredentialFilePath)
 		viper.Set("Nats.Session", uuid.NewString())
+		viper.Set("Zitadel.BearerToken", config.Zitadel.BearerToken)
+		viper.Set("Zitadel.IdToken", config.Zitadel.IdToken)
+		viper.Set("Zitalde.ExpiresAt", config.Zitadel.ExpiresAt)
 		if err != nil {
 			fmt.Printf("Failed to write default config: %v\n", err)
 			os.Exit(1)
