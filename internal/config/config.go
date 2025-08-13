@@ -145,7 +145,7 @@ func loadConfigIntoViper() *Config {
 		viper.Set("Nats.Session", uuid.NewString())
 		viper.Set("Zitadel.BearerToken", config.Zitadel.BearerToken)
 		viper.Set("Zitadel.IdToken", config.Zitadel.IdToken)
-		viper.Set("Zitalde.ExpiresAt", config.Zitadel.ExpiresAt)
+		viper.Set("Zitadel.ExpiresAt", config.Zitadel.ExpiresAt)
 		if err != nil {
 			fmt.Printf("Failed to write default config: %v\n", err)
 			os.Exit(1)
