@@ -9,17 +9,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/slog"
 
-	"github.com/zitadel/oidc/v3/pkg/oidc"
+	"github.com/nats-io/nats.go"
+	client2 "github.com/zitadel/oidc/v3/pkg/client"
+	"github.com/zitadel/oidc/v3/pkg/client/rs"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization"
 	"github.com/zitadel/zitadel-go/v3/pkg/authorization/oauth"
-	"github.com/zitadel/zitadel-go/v3/pkg/client"
-	//"github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/management"
 	"github.com/zitadel/zitadel-go/v3/pkg/http/middleware"
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
@@ -53,35 +55,15 @@ func main() {
 	// Initiate the authorization by providing a zitadel configuration and a verifier.
 	// This example will use OAuth2 Introspection for this, therefore you will also need to provide the downloaded api key.json
 	zit := zitadel.New(*domain, zitadel.WithInsecure("8080"))
-	authZ, err := authorization.New(ctx, zit, oauth.DefaultAuthorization(*key))
+	nc, err := nats.Connect(nats.DefaultURL)
+	if err != nil {
+		return
+	}
+	httpClient := httpClientNatsEspionage(nc)
+	authZ, err := authorization.New(ctx, zit, DefaultAuthorization(*key, rs.WithClient(httpClient)))
 	if err != nil {
 		slog.Error("zitadel sdk could not initialize", "error", err)
 		os.Exit(1)
-	}
-	authOption := client.DefaultServiceUserAuthentication(
-		*key,
-		oidc.ScopeOpenID,
-		client.ScopeZitadelAPI(),
-	)
-	// api is used to check what this service-account-user is part of etc, e.g., api.ManagementService().GetMyOrg(ctx, &managedmenet.GetMyOrgRequest{})
-	api, err := client.New(ctx, zit, client.WithAuth(authOption))
-	_ = api
-	_ = err
-	// resp, err := api.ManagementService().GetMyOrg(ctx, &management.GetMyOrgRequest{})
-	// // Initialize the HTTP middleware by providing the authorization
-	// if err != nil {
-	// 	slog.Error("zitadel sdk could not get service account", "error", err)
-	// }
-	// slog.Info("service account", "org", resp.Org)
-	a, errr := authZ.CheckAuthorization(ctx, "abc")
-	if errr != nil {
-		// unauthorized
-		return
-	}
-	authorized := a.IsGrantedRole("map-cli.write")
-	// authorized := a.IsGrantedRoleInOrganization("map-cli.write", "map")
-	if !authorized {
-		// not allowed to write.... could be command or whatever
 	}
 	mw := middleware.New(authZ)
 
@@ -161,6 +143,92 @@ func main() {
 	}
 }
 
+func httpClientNatsEspionage(natsConn *nats.Conn) *http.Client {
+	return &http.Client{
+		Transport: FartTransport{http.DefaultTransport, natsConn},
+	}
+}
+
+type FartTransport struct {
+	Base     http.RoundTripper
+	natsConn *nats.Conn
+}
+
+func (t FartTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// "h8s.http.GET.localhost._well-known.openid-configuration"
+	natsSubject := "h8s" + "." + req.URL.Scheme + "." + req.Method + "." + "localhost" + mapPath(req.URL.Path)
+	fmt.Printf("Request URL: %s\n natsSubject: %s\n", req.URL.String(), natsSubject)
+	// if strings.Contains(req.URL.Path, "openid") {
+	// 	t.natsConn.Request("h8s.http.GET.localhost.", []byte(""), 5*time.Second)
+	// }
+	// if strings.Contains(req.URL.Path, "authorize") {
+	// 	return t.Base.RoundTrip(req)
+	// }
+	body := []byte{}
+	var err error
+	if req.Body != nil {
+		body, err = io.ReadAll(req.Body)
+		fmt.Printf("Request body: %s\n", string(body))
+	}
+	if err != nil {
+		fmt.Println("Error reading request body:", err)
+	}
+	msg := nats.Msg{
+		Subject: natsSubject,
+		Data:    body,
+		Header:  fromHttpHeaders(req.Header),
+	}
+	fmt.Printf("httpRequest: %v\n", req)
+	fmt.Printf("NATS headers: %v\n", msg.Header)
+	fmt.Printf("nats data: %s\n", string(msg.Data))
+	reply, err := t.natsConn.RequestMsg(&msg, time.Second*5)
+	if err != nil {
+		fmt.Println("Error requesting NATS subject:", err)
+	} else {
+		fmt.Printf("NATS reply: %s\n", string(reply.Data))
+	}
+	return toHttpResponse(reply, req)
+}
+
+func toHttpResponse(reply *nats.Msg, req *http.Request) (*http.Response, error) {
+	if reply == nil {
+		return nil, errors.New("nats reply is nil")
+	}
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     fromNatsHeader(reply.Header),
+		Body:       io.NopCloser(strings.NewReader(string(reply.Data))),
+		Request:    req,
+	}
+	return resp, nil
+}
+
+func fromNatsHeader(header nats.Header) http.Header {
+	h := http.Header{}
+	for k, v := range header {
+		if len(v) > 0 {
+			h.Add(k, v[0])
+		}
+	}
+	return h
+}
+
+func fromHttpHeaders(header http.Header) nats.Header {
+	h := nats.Header{}
+	for k, v := range header {
+		if len(v) > 0 {
+			h.Add(k, v[0])
+		}
+	}
+	return h
+}
+
+func mapPath(s string) string {
+	s = strings.ReplaceAll(s, ".", "_")
+	s = strings.ReplaceAll(s, "/", ".")
+	return s
+}
+
 // jsonResponse is a simple helper function to return a proper JSON response
 func jsonResponse(w http.ResponseWriter, resp any, status int) error {
 	w.Header().Set("content-type", "application/json")
@@ -175,4 +243,20 @@ func jsonResponse(w http.ResponseWriter, resp any, status int) error {
 
 type taskList struct {
 	Tasks []string `json:"tasks,omitempty"`
+}
+
+func DefaultAuthorization(path string, opt rs.Option) authorization.VerifierInitializer[*oauth.IntrospectionContext] {
+	c, err := client2.ConfigFromKeyFile(path)
+	if err != nil {
+		return func(ctx context.Context, _ *zitadel.Zitadel) (authorization.Verifier[*oauth.IntrospectionContext], error) {
+			return nil, err
+		}
+	}
+	return oauth.WithIntrospection[*oauth.IntrospectionContext](JWTProfileIntrospectionAuthentication(c, opt))
+}
+
+func JWTProfileIntrospectionAuthentication(file *client2.KeyFile, opt rs.Option) oauth.IntrospectionAuthentication {
+	return func(ctx context.Context, issuer string) (rs.ResourceServer, error) {
+		return rs.NewResourceServerJWTProfile(ctx, issuer, file.ClientID, file.KeyID, []byte(file.Key), opt)
+	}
 }
