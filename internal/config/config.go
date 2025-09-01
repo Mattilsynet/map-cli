@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -33,7 +34,7 @@ type Nats struct {
 }
 
 type Zitadel struct {
-	BearerToken string `mapstructure:"token"`
+	BearerToken string `mapstructure:"bearertoken"`
 	IdToken     string `mapstructure:"idtoken"`
 	ExpiresAt   uint64 `mapstructure:"expiresAt"`
 }
@@ -52,6 +53,13 @@ func DefaultConfig() *Config {
 		Zitadel:       Zitadel{BearerToken: "", IdToken: ""},
 		Authenticated: false,
 	}
+}
+
+func (z *Zitadel) IsExpired() bool {
+	if uint64(time.Now().Unix()) >= z.ExpiresAt-300 {
+		return true
+	}
+	return false
 }
 
 func (n *Nats) GetConnection() (*nats.Conn, error) {

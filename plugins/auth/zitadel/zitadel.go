@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	MapCliClientId = "332875394606759939" // mattilsynet
-	// MapCliClientId = "333004134489849859" // home office
+	//	MapCliClientId = "332875394606759939" // mattilsynet
+	MapCliClientId = "335928487913259010" // home office
 	// MapCliClientId = "332861563872542723"
 	Issuer = "http://localhost:8080"
 )

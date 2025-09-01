@@ -1,0 +1,15 @@
+{
+ "type": {
+  "kind": "Organization",
+  "api_version": "v1"
+ },
+ "metadata": {
+  "name": "akva",
+  "resource_version": "d1c1d253-400b-4414-bb5f-7f101913f759"
+ },
+ "spec": {
+    "resource_id": "abc123123",
+    "organization_name": "akva",
+    "organization_domain_name": "aqua-men.com"
+ }
+}

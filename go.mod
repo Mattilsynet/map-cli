@@ -5,7 +5,7 @@ go 1.23.7
 toolchain go1.24.3
 
 require (
-	github.com/Mattilsynet/mapis v0.0.11
+	github.com/Mattilsynet/mapis v0.0.14
 	github.com/alecthomas/chroma v0.10.0
 	github.com/charmbracelet/bubbles v0.20.1-0.20250213142908-7a6b190840c8
 	github.com/charmbracelet/bubbletea v1.3.3
@@ -15,11 +15,11 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
-	github.com/zitadel/oidc v1.13.5
 	github.com/zitadel/oidc/v3 v3.44.0
 	github.com/zitadel/zitadel-go/v3 v3.10.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	google.golang.org/protobuf v1.36.6
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -36,7 +36,6 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -78,7 +77,6 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )
 
 replace golang.org/x/crypto => golang.org/x/crypto v0.31.0
