@@ -49,7 +49,6 @@ var (
 
 func main() {
 	flag.Parse()
-
 	ctx := context.Background()
 
 	// Initiate the authorization by providing a zitadel configuration and a verifier.
@@ -66,7 +65,6 @@ func main() {
 		os.Exit(1)
 	}
 	mw := middleware.New(authZ)
-
 	router := http.NewServeMux()
 
 	// This endpoint is accessible by anyone and will always return "200 OK" to indicate the API is running

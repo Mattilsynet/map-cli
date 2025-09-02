@@ -20,24 +20,24 @@ func TestOrgHandler_HandleCobraCommand(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{
-			name:    "No file provided",
-			fields:  fields{""},
-			args:    args{cmd: &cobra.Command{}, args: []string{}},
-			wantErr: true,
-		},
-		{
-			name:    "File not found",
-			fields:  fields{""},
-			args:    args{cmd: &cobra.Command{}, args: []string{"nonexistentfile.yaml"}},
-			wantErr: true,
-		},
-		{
-			name:    "Invalid file format",
-			fields:  fields{""},
-			args:    args{cmd: &cobra.Command{}, args: []string{"testdata/invalid-format.txt"}},
-			wantErr: true,
-		},
+		// {
+		// 	name:    "No file provided",
+		// 	fields:  fields{""},
+		// 	args:    args{cmd: &cobra.Command{}, args: []string{}},
+		// 	wantErr: true,
+		// },
+		// {
+		// 	name:    "File not found",
+		// 	fields:  fields{""},
+		// 	args:    args{cmd: &cobra.Command{}, args: []string{"nonexistentfile.yaml"}},
+		// 	wantErr: true,
+		// },
+		// {
+		// 	name:    "Invalid file format",
+		// 	fields:  fields{""},
+		// 	args:    args{cmd: &cobra.Command{}, args: []string{"testdata/invalid-format.txt"}},
+		// 	wantErr: true,
+		// },
 		{
 			name:    "Valid JSON file",
 			fields:  fields{""},

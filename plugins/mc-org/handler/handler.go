@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,9 @@ import (
 
 	org "github.com/Mattilsynet/mapis/gen/go/organization"
 	"github.com/spf13/cobra"
+	orgV2 "github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/org/v2"
+
+	"github.com/zitadel/zitadel-go/v3/pkg/client/system"
 	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/yaml.v3"
 )
@@ -17,11 +21,12 @@ type OrgHandler struct {
 	bearerToken string
 }
 
+// TODO: Plan is to move this to its own plattform-resource-admission handler inside wasmcloud and not this close to the cli, the cli should just submit to CQRS
 func (o *OrgHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return errors.New("no file provided")
 	}
-
+	ctx := context.Background()
 	filePath := args[0]
 
 	data, err := readFileContent(filePath)
@@ -41,6 +46,11 @@ func (o *OrgHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	orgRequest := orgV2.AddOrganizationRequest{
+		Name:  message.Spec.OrganizationName,
+		OrgId: &message.Spec.ResourceId,
+	}
+
 	fmt.Println(message)
 	return nil
 }
