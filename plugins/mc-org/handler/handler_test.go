@@ -3,10 +3,15 @@ package handler
 import (
 	"testing"
 
+	"github.com/Mattilsynet/map-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
 func TestOrgHandler_HandleCobraCommand(t *testing.T) {
+	if t.Skipped() {
+		t.Skip("Skipping test as it requires a valid bearer token and external dependencies.")
+	}
+	bearerToken := config.CurrentConfig.Zitadel.BearerToken
 	type fields struct {
 		bearerToken string
 	}
@@ -40,9 +45,9 @@ func TestOrgHandler_HandleCobraCommand(t *testing.T) {
 		// },
 		{
 			name:    "Valid JSON file",
-			fields:  fields{""},
+			fields:  fields{bearerToken: bearerToken},
 			args:    args{cmd: &cobra.Command{}, args: []string{"testdata/org.json"}},
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -50,7 +55,8 @@ func TestOrgHandler_HandleCobraCommand(t *testing.T) {
 			o := &OrgHandler{
 				bearerToken: tt.fields.bearerToken,
 			}
-			if err := o.HandleCobraCommand(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
+			err := o.HandleCobraCommand(tt.args.cmd, tt.args.args)
+			if err != nil {
 				t.Errorf("OrgHandler.HandleCobraCommand() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

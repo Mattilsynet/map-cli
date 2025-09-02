@@ -10,9 +10,10 @@ import (
 
 	org "github.com/Mattilsynet/mapis/gen/go/organization"
 	"github.com/spf13/cobra"
+	"github.com/zitadel/zitadel-go/v3/pkg/client"
 	orgV2 "github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/org/v2"
+	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 
-	"github.com/zitadel/zitadel-go/v3/pkg/client/system"
 	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/yaml.v3"
 )
@@ -46,10 +47,23 @@ func (o *OrgHandler) HandleCobraCommand(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	// e, r := middleware.NewGenericAuthenticator(nil)
+	// if r != nil {
+	// 	return fmt.Errorf("failed to create auth interceptor: %w", r)
+	// }
+	zit := zitadel.New("localhost", zitadel.WithInsecure("8080"))
+	zitClient, err := client.New(ctx, zit, client.WithAuth(client.PAT(o.bearerToken)))
+
 	orgRequest := orgV2.AddOrganizationRequest{
 		Name:  message.Spec.OrganizationName,
 		OrgId: &message.Spec.ResourceId,
 	}
+	orgClient := zitClient.OrganizationServiceV2()
+	e1, e2 := orgClient.AddOrganization(ctx, &orgRequest)
+	if e2 != nil {
+		return e2
+	}
+	fmt.Println("Organization created with ID:", e1)
 
 	fmt.Println(message)
 	return nil

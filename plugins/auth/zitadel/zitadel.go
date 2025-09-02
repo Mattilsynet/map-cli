@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	//	MapCliClientId = "332875394606759939" // mattilsynet
-	MapCliClientId = "335928487913259010" // home office
+	MapCliClientId = "336051528106311683" // mattilsynet
+	// MapCliClientId = "335928487913259010" // home office
 	// MapCliClientId = "332861563872542723"
 	Issuer = "http://localhost:8080"
 )
@@ -29,7 +29,7 @@ func DeviceLogin() error {
 	defer stop()
 	clientID := MapCliClientId
 	issuer := Issuer
-	scopess := "email profile openid"
+	scopess := "email profile openid urn:zitadel:iam:org:project:id:335484617136144387:aud"
 	scopes := strings.Split(scopess, " ")
 	clientSecret := ""
 	// might need to use cookies in the future, not sure.
